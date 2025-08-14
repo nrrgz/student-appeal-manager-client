@@ -2,11 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "../../contexts/AuthContext";
 
 export default function LoginPage() {
   const [selectedRole, setSelectedRole] = useState("");
   const [isLogin, setIsLogin] = useState(true);
-  const [isLoading, setIsLoading] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -18,10 +19,12 @@ export default function LoginPage() {
   });
   const [errors, setErrors] = useState({});
   const router = useRouter();
+  const { login, register, error: authError, clearError } = useAuth();
 
   const handleRoleSelect = (role) => {
     setSelectedRole(role);
     setErrors({});
+    clearError();
   };
 
   const handleInputChange = (e) => {
@@ -36,6 +39,11 @@ export default function LoginPage() {
         ...prev,
         [name]: "",
       }));
+    }
+
+    // Clear auth error when user starts typing
+    if (authError) {
+      clearError();
     }
   };
 
@@ -86,25 +94,17 @@ export default function LoginPage() {
       return;
     }
 
-    setIsLoading(true);
-
     try {
       if (isLogin) {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        const userInfo = {
-          role: selectedRole,
+        // Login
+        await login({
           email: formData.email,
-          name:
-            `${formData.firstName || "User"} ${
-              formData.lastName || ""
-            }`.trim() || "User",
-          loggedIn: true,
-          loginTime: new Date().toISOString(),
-        };
+          password: formData.password,
+          role: selectedRole,
+          rememberMe,
+        });
 
-        sessionStorage.setItem("userInfo", JSON.stringify(userInfo));
-
+        // Redirect based on role
         if (selectedRole === "student") {
           router.push("/student");
         } else if (selectedRole === "admin") {
@@ -113,20 +113,20 @@ export default function LoginPage() {
           router.push("/reviewer");
         }
       } else {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        const userInfo = {
-          role: selectedRole,
+        // Register
+        const userData = {
           email: formData.email,
-          name: `${formData.firstName} ${formData.lastName}`,
-          studentId: formData.studentId,
-          department: formData.department,
-          loggedIn: true,
-          loginTime: new Date().toISOString(),
+          password: formData.password,
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          role: selectedRole,
+          ...(selectedRole === "student" && { studentId: formData.studentId }),
+          ...(selectedRole === "admin" && { department: formData.department }),
         };
 
-        sessionStorage.setItem("userInfo", JSON.stringify(userInfo));
+        await register(userData);
 
+        // Redirect based on role
         if (selectedRole === "student") {
           router.push("/student");
         } else if (selectedRole === "admin") {
@@ -137,9 +137,7 @@ export default function LoginPage() {
       }
     } catch (error) {
       console.error("Authentication error:", error);
-      setErrors({ general: "Authentication failed. Please try again." });
-    } finally {
-      setIsLoading(false);
+      // Error is already set in the context
     }
   };
 
@@ -155,6 +153,7 @@ export default function LoginPage() {
       department: "",
     });
     setErrors({});
+    clearError();
   };
 
   return (
@@ -449,51 +448,40 @@ export default function LoginPage() {
                 </div>
               )}
 
-              {errors.general && (
+              {isLogin && (
+                <div className="flex items-center">
+                  <input
+                    id="remember-me"
+                    name="remember-me"
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300 rounded"
+                  />
+                  <label
+                    htmlFor="remember-me"
+                    className="ml-2 block text-sm text-gray-900"
+                  >
+                    Remember me
+                  </label>
+                </div>
+              )}
+
+              {(errors.general || authError) && (
                 <div className="bg-red-50 border border-red-200 rounded-md p-4">
-                  <p className="text-sm text-red-600">{errors.general}</p>
+                  <p className="text-sm text-red-600">
+                    {errors.general || authError}
+                  </p>
                 </div>
               )}
 
               <div>
                 <button
                   type="submit"
-                  disabled={!selectedRole || isLoading}
-                  className={`w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white ${
-                    selectedRole && !isLoading
-                      ? "bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"
-                      : "bg-gray-300 cursor-not-allowed"
-                  } transition-colors duration-200`}
+                  disabled={!selectedRole}
+                  className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-200 disabled:bg-gray-300 disabled:cursor-not-allowed"
                 >
-                  {isLoading ? (
-                    <div className="flex items-center">
-                      <svg
-                        className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      {isLogin ? "Signing in..." : "Creating account..."}
-                    </div>
-                  ) : isLogin ? (
-                    "Sign In"
-                  ) : (
-                    "Create Account"
-                  )}
+                  {isLogin ? "Sign In" : "Create Account"}
                 </button>
               </div>
             </form>

@@ -36,22 +36,6 @@ export default function NewAppealForm() {
 
   const router = useRouter();
 
-  useEffect(() => {
-    const storedUserInfo = sessionStorage.getItem("userInfo");
-    if (!storedUserInfo) {
-      router.push("/login");
-      return;
-    }
-
-    const user = JSON.parse(storedUserInfo);
-    if (user.role !== "student") {
-      router.push("/login");
-      return;
-    }
-
-    setUserInfo(user);
-  }, [router]);
-
   const steps = [
     {
       id: 1,

@@ -9,19 +9,10 @@ export default function StudentDashboard() {
   const router = useRouter();
 
   useEffect(() => {
-    const storedUserInfo = sessionStorage.getItem("userInfo");
-    if (!storedUserInfo) {
-      router.push("/login");
-      return;
+    const userInfo = localStorage.getItem("userInfo");
+    if (userInfo) {
+      setUserInfo(JSON.parse(userInfo));
     }
-
-    const user = JSON.parse(storedUserInfo);
-    if (user.role !== "student") {
-      router.push("/login");
-      return;
-    }
-
-    setUserInfo(user);
 
     const mockAppeals = [
       {
