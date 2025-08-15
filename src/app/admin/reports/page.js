@@ -134,10 +134,10 @@ export default function StatisticsDashboard() {
               </button>
               <button
                 onClick={() => {
-                  sessionStorage.removeItem("userInfo");
+                  localStorage.removeItem("userInfo");
                   window.location.href = "/";
                 }}
-                className="bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700"
+                className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700"
               >
                 Logout
               </button>

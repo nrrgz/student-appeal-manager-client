@@ -20,7 +20,7 @@ export default function AppealReview() {
   const appealId = params.appealId;
 
   useEffect(() => {
-    const user = sessionStorage.getItem("userInfo");
+    const user = localStorage.getItem("userInfo");
     if (!user) {
       router.push("/login");
       return;
@@ -243,7 +243,7 @@ export default function AppealReview() {
               </span>
               <button
                 onClick={() => {
-                  sessionStorage.removeItem("userInfo");
+                  localStorage.removeItem("userInfo");
                   router.push("/login");
                 }}
                 className="text-sm text-purple-600 hover:text-purple-800"
@@ -452,7 +452,7 @@ export default function AppealReview() {
                     <select
                       value={newStatus}
                       onChange={(e) => setNewStatus(e.target.value)}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900"
                     >
                       <option value="Under Review">Under Review</option>
                       <option value="Awaiting Info">Awaiting Info</option>
@@ -477,7 +477,7 @@ export default function AppealReview() {
                       value={recommendation}
                       onChange={(e) => setRecommendation(e.target.value)}
                       placeholder="Enter your recommendation..."
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm h-20"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm h-20 text-gray-900"
                     />
                   </div>
 
@@ -488,7 +488,7 @@ export default function AppealReview() {
                     <select
                       value={decision}
                       onChange={(e) => setDecision(e.target.value)}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900"
                     >
                       <option value="">Select decision...</option>
                       <option value="Appeal Upheld">Appeal Upheld</option>
@@ -530,7 +530,7 @@ export default function AppealReview() {
                     value={newNote}
                     onChange={(e) => setNewNote(e.target.value)}
                     placeholder="Add internal note..."
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm h-20"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm h-20 text-gray-900"
                   />
                   <button
                     onClick={handleAddNote}
@@ -562,7 +562,7 @@ export default function AppealReview() {
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
                     placeholder="Add comment visible to student..."
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm h-20"
+                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm h-20 text-gray-900"
                   />
                   <button
                     onClick={handleAddComment}

@@ -12,6 +12,24 @@ export default function AdminDashboard() {
     grounds: "",
   });
   const [loading, setLoading] = useState(true);
+  const [userInfo, setUserInfo] = useState(null);
+
+  // Check authentication
+  useEffect(() => {
+    const storedUserInfo = localStorage.getItem("userInfo");
+    if (!storedUserInfo) {
+      window.location.href = "/login";
+      return;
+    }
+
+    const user = JSON.parse(storedUserInfo);
+    if (user.role !== "admin") {
+      window.location.href = "/login";
+      return;
+    }
+
+    setUserInfo(user);
+  }, []);
 
   // Mock data - replace with actual API calls
   useEffect(() => {
@@ -118,6 +136,14 @@ export default function AdminDashboard() {
     );
   }
 
+  if (!userInfo) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-xl">Loading...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
@@ -154,7 +180,7 @@ export default function AdminDashboard() {
               </a>
               <button
                 onClick={() => {
-                  sessionStorage.removeItem("userInfo");
+                  localStorage.removeItem("userInfo");
                   window.location.href = "/";
                 }}
                 className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700"
@@ -288,7 +314,7 @@ export default function AdminDashboard() {
                 <input
                   type="text"
                   placeholder="e.g., Computer Science"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
                   value={filters.department}
                   onChange={(e) =>
                     handleFilterChange("department", e.target.value)
@@ -301,7 +327,7 @@ export default function AdminDashboard() {
                   Status
                 </label>
                 <select
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
                   value={filters.status}
                   onChange={(e) => handleFilterChange("status", e.target.value)}
                 >
@@ -319,7 +345,7 @@ export default function AdminDashboard() {
                 </label>
                 <input
                   type="date"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
                   value={filters.date}
                   onChange={(e) => handleFilterChange("date", e.target.value)}
                 />
@@ -332,7 +358,7 @@ export default function AdminDashboard() {
                 <input
                   type="text"
                   placeholder="e.g., Late Submission"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
                   value={filters.grounds}
                   onChange={(e) =>
                     handleFilterChange("grounds", e.target.value)

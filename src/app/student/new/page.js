@@ -36,6 +36,23 @@ export default function NewAppealForm() {
 
   const router = useRouter();
 
+  // Check authentication
+  useEffect(() => {
+    const storedUserInfo = localStorage.getItem("userInfo");
+    if (!storedUserInfo) {
+      router.push("/login");
+      return;
+    }
+
+    const user = JSON.parse(storedUserInfo);
+    if (user.role !== "student") {
+      router.push("/login");
+      return;
+    }
+
+    setUserInfo(user);
+  }, [router]);
+
   const steps = [
     {
       id: 1,
@@ -146,7 +163,7 @@ export default function NewAppealForm() {
                   onChange={(e) =>
                     handleInputChange("firstName", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900"
                   required
                 />
               </div>
@@ -161,7 +178,7 @@ export default function NewAppealForm() {
                   onChange={(e) =>
                     handleInputChange("lastName", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900"
                   required
                 />
               </div>
@@ -176,7 +193,7 @@ export default function NewAppealForm() {
                   onChange={(e) =>
                     handleInputChange("studentId", e.target.value)
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900"
                   placeholder="e.g., 12345678"
                   required
                 />
@@ -190,7 +207,7 @@ export default function NewAppealForm() {
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900"
                   required
                 />
               </div>
@@ -203,7 +220,7 @@ export default function NewAppealForm() {
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => handleInputChange("phone", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900"
                 />
               </div>
             </div>
@@ -251,7 +268,7 @@ export default function NewAppealForm() {
                       onChange={(e) =>
                         handleInputChange("adviserName", e.target.value)
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900"
                     />
                   </div>
 
@@ -265,7 +282,7 @@ export default function NewAppealForm() {
                       onChange={(e) =>
                         handleInputChange("adviserEmail", e.target.value)
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900"
                     />
                   </div>
 
@@ -279,7 +296,7 @@ export default function NewAppealForm() {
                       onChange={(e) =>
                         handleInputChange("adviserPhone", e.target.value)
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900"
                     />
                   </div>
                 </div>
@@ -370,7 +387,7 @@ export default function NewAppealForm() {
                 value={formData.statement}
                 onChange={(e) => handleInputChange("statement", e.target.value)}
                 rows={8}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900"
                 placeholder="Please provide a clear and detailed explanation of your appeal, including relevant dates, circumstances, and any supporting evidence..."
                 required
               />

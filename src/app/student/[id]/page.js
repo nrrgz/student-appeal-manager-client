@@ -11,7 +11,7 @@ export default function ViewSubmittedAppeal() {
   const params = useParams();
 
   useEffect(() => {
-    const storedUserInfo = sessionStorage.getItem("userInfo");
+    const storedUserInfo = localStorage.getItem("userInfo");
     if (!storedUserInfo) {
       router.push("/login");
       return;

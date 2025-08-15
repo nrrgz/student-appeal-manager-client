@@ -8,7 +8,7 @@ export default function LateSubmissionInfo() {
   const router = useRouter();
 
   useEffect(() => {
-    const storedUserInfo = sessionStorage.getItem("userInfo");
+    const storedUserInfo = localStorage.getItem("userInfo");
     if (!storedUserInfo) {
       router.push("/login");
       return;

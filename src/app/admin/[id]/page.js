@@ -14,6 +14,24 @@ export default function AppealManagement() {
   const [newStatus, setNewStatus] = useState("");
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [userInfo, setUserInfo] = useState(null);
+
+  // Check authentication
+  useEffect(() => {
+    const storedUserInfo = localStorage.getItem("userInfo");
+    if (!storedUserInfo) {
+      window.location.href = "/login";
+      return;
+    }
+
+    const user = JSON.parse(storedUserInfo);
+    if (user.role !== "admin") {
+      window.location.href = "/login";
+      return;
+    }
+
+    setUserInfo(user);
+  }, []);
 
   // Mock data - replace with actual API calls
   useEffect(() => {
@@ -201,6 +219,14 @@ export default function AppealManagement() {
     );
   }
 
+  if (!userInfo) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-xl">Loading...</div>
+      </div>
+    );
+  }
+
   if (!appeal) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -243,7 +269,7 @@ export default function AppealManagement() {
               </button>
               <button
                 onClick={() => {
-                  sessionStorage.removeItem("userInfo");
+                  localStorage.removeItem("userInfo");
                   window.location.href = "/";
                 }}
                 className="bg-gray-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-700"
@@ -356,7 +382,7 @@ export default function AppealManagement() {
               </h3>
               <div className="flex items-center space-x-4">
                 <select
-                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
                   value={newStatus}
                   onChange={(e) => setNewStatus(e.target.value)}
                 >
@@ -396,7 +422,7 @@ export default function AppealManagement() {
               <div className="mt-4">
                 <textarea
                   placeholder="Add a comment visible to the student..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
                   rows="3"
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
@@ -459,7 +485,7 @@ export default function AppealManagement() {
               <div>
                 <textarea
                   placeholder="Add internal note..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
                   rows="3"
                   value={newNote}
                   onChange={(e) => setNewNote(e.target.value)}

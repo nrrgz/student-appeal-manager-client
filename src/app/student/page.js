@@ -46,12 +46,16 @@ export default function StudentDashboard() {
   }, [router]);
 
   const handleSignOut = () => {
-    sessionStorage.removeItem("userInfo");
+    localStorage.removeItem("userInfo");
     router.push("/login");
   };
 
   const handleNewAppeal = () => {
     router.push("/student/new");
+  };
+
+  const handleViewAppeal = (appealId) => {
+    router.push(`/student/${appealId}`);
   };
 
   const getStatusColor = (status) => {
@@ -179,6 +183,9 @@ export default function StudentDashboard() {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Grounds
                     </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
@@ -207,6 +214,14 @@ export default function StudentDashboard() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {appeal.grounds}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button
+                          onClick={() => handleViewAppeal(appeal.id)}
+                          className="text-purple-600 hover:text-purple-900 font-medium"
+                        >
+                          View Appeal
+                        </button>
                       </td>
                     </tr>
                   ))}

@@ -17,7 +17,7 @@ export default function ReviewerDashboard() {
   const router = useRouter();
 
   useEffect(() => {
-    const user = sessionStorage.getItem("userInfo");
+    const user = localStorage.getItem("userInfo");
     if (!user) {
       router.push("/login");
       return;
@@ -229,7 +229,7 @@ export default function ReviewerDashboard() {
               </span>
               <button
                 onClick={() => {
-                  sessionStorage.removeItem("userInfo");
+                  localStorage.removeItem("userInfo");
                   router.push("/login");
                 }}
                 className="text-sm text-purple-600 hover:text-purple-800"
@@ -294,7 +294,7 @@ export default function ReviewerDashboard() {
                 <select
                   value={filters.status}
                   onChange={(e) => handleFilterChange("status", e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900"
                 >
                   <option value="">All Statuses</option>
                   <option value="Pending">Pending</option>
@@ -312,7 +312,7 @@ export default function ReviewerDashboard() {
                   onChange={(e) =>
                     handleFilterChange("priority", e.target.value)
                   }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900"
                 >
                   <option value="">All Priorities</option>
                   <option value="High">High</option>
@@ -329,7 +329,7 @@ export default function ReviewerDashboard() {
                   onChange={(e) =>
                     handleFilterChange("department", e.target.value)
                   }
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900"
                 >
                   <option value="">All Departments</option>
                   <option value="Computer Science">Computer Science</option>
@@ -346,7 +346,7 @@ export default function ReviewerDashboard() {
                   type="date"
                   value={filters.date}
                   onChange={(e) => handleFilterChange("date", e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900"
                 />
               </div>
               <div className="flex items-end">
