@@ -159,28 +159,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b border-gray-200 py-4">
-        <div className="max-w-7xl mx-auto px-6 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <img
-                src="/images/logo.png"
-                alt="TUOS Logo"
-                className="w-30  object-contain"
-              />
-            </div>
-            <div className="flex items-center space-x-4">
-              <button className="text-gray-600 hover:text-purple-600 font-medium text-sm transition-colors">
-                Help
-              </button>
-              <button className="text-gray-600 hover:text-purple-600 font-medium text-sm transition-colors">
-                Contact
-              </button>
-            </div>
-          </div>
-        </div>
-      </header>
-
       <div className="flex flex-col justify-center py-12 sm:px-6 lg:px-8">
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <div className="text-center">

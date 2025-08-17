@@ -9,6 +9,12 @@ class ApiService {
   // Helper method to make HTTP requests
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
+
+    // Add auth token if available
+    const token = this.getToken();
+    console.log("API Request - URL:", url);
+    console.log("API Request - Token:", token ? "Token exists" : "No token");
+
     const config = {
       headers: {
         "Content-Type": "application/json",
@@ -17,10 +23,11 @@ class ApiService {
       ...options,
     };
 
-    // Add auth token if available
-    const token = this.getToken();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      console.log("API Request - Authorization header added");
+    } else {
+      console.log("API Request - No Authorization header (no token)");
     }
 
     try {
@@ -43,9 +50,25 @@ class ApiService {
   // Get stored token
   getToken() {
     if (typeof window !== "undefined") {
-      return (
-        localStorage.getItem("authToken") || sessionStorage.getItem("authToken")
-      );
+      // First try to get token from dedicated storage
+      let token =
+        localStorage.getItem("authToken") ||
+        sessionStorage.getItem("authToken");
+
+      // If no dedicated token, try to get from userInfo
+      if (!token) {
+        const userInfo = localStorage.getItem("userInfo");
+        if (userInfo) {
+          try {
+            const user = JSON.parse(userInfo);
+            token = user.token || user.authToken;
+          } catch (e) {
+            console.error("Failed to parse userInfo:", e);
+          }
+        }
+      }
+
+      return token;
     }
     return null;
   }
@@ -110,6 +133,22 @@ class ApiService {
   // Check if user is authenticated
   isAuthenticated() {
     return !!this.getToken();
+  }
+
+  // Appeals methods
+  async getStudentAppeals() {
+    return this.request("/appeals");
+  }
+
+  async getStudentAppeal(appealId) {
+    return this.request(`/appeals/${appealId}`);
+  }
+
+  async createAppeal(appealData) {
+    return this.request("/appeals", {
+      method: "POST",
+      body: JSON.stringify(appealData),
+    });
   }
 }
 

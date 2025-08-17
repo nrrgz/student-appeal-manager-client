@@ -2,10 +2,14 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import apiService from "../../../services/api";
+import ProtectedRoute from "../../../components/ProtectedRoute";
 
-export default function NewAppealForm() {
+export default function NewAppeal() {
   const [userInfo, setUserInfo] = useState(null);
   const [currentStep, setCurrentStep] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     declaration: false,
     deadlineCheck: false,
@@ -51,6 +55,15 @@ export default function NewAppealForm() {
     }
 
     setUserInfo(user);
+
+    // Auto-populate form with user's registered information
+    setFormData((prev) => ({
+      ...prev,
+      firstName: user.firstName || "",
+      lastName: user.lastName || "",
+      studentId: user.studentId || "",
+      email: user.email || "",
+    }));
   }, [router]);
 
   const steps = [
@@ -92,12 +105,107 @@ export default function NewAppealForm() {
     }
   };
 
+  const validateForm = () => {
+    const errors = [];
+
+    if (!formData.declaration) errors.push("Declaration must be accepted");
+    if (!formData.deadlineCheck)
+      errors.push("Deadline check must be confirmed");
+    if (!formData.firstName.trim()) errors.push("First name is required");
+    if (!formData.lastName.trim()) errors.push("Last name is required");
+    if (!formData.studentId.trim()) errors.push("Student ID is required");
+    if (!formData.email.trim()) errors.push("Email is required");
+    if (!formData.appealType) errors.push("Appeal type is required");
+    if (!formData.grounds.length)
+      errors.push("At least one ground must be selected");
+    if (!formData.statement.trim()) errors.push("Appeal statement is required");
+    if (!formData.confirmAll)
+      errors.push("Final confirmation must be accepted");
+
+    return errors;
+  };
+
   const handleSubmit = async () => {
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    handleInputChange("submitted", true);
-    setTimeout(() => {
-      router.push("/student");
-    }, 3000);
+    if (!userInfo) {
+      setError("User not authenticated");
+      return;
+    }
+
+    // Debug: Check if user has token
+    console.log("User info:", userInfo);
+    console.log(
+      "Auth token from localStorage:",
+      localStorage.getItem("authToken")
+    );
+    console.log(
+      "Auth token from sessionStorage:",
+      sessionStorage.getItem("authToken")
+    );
+
+    // Validate form
+    const validationErrors = validateForm();
+    if (validationErrors.length > 0) {
+      setError(validationErrors.join(", "));
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Prepare appeal data for API - match server expectations exactly
+      const appealData = {
+        declaration: formData.declaration,
+        deadlineCheck: formData.deadlineCheck,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        studentId: formData.studentId,
+        email: formData.email,
+        phone: formData.phone || "",
+        hasAdviser: formData.hasAdviser,
+        adviserName: formData.hasAdviser ? formData.adviserName : "",
+        adviserEmail: formData.hasAdviser ? formData.adviserEmail : "",
+        adviserPhone: formData.hasAdviser ? formData.adviserPhone : "",
+        appealType: formData.appealType,
+        grounds: formData.grounds,
+        statement: formData.statement,
+        // Evidence should be an array of file objects, but for now we'll send empty array
+        // since file upload isn't implemented yet
+        evidence: [],
+        // Add missing required fields
+        moduleCode: "", // Optional field
+        academicYear: new Date().getFullYear().toString(),
+        semester: "1", // Default to semester 1
+        confirmAll: formData.confirmAll,
+      };
+
+      console.log("Submitting appeal data:", appealData);
+      console.log("User info from state:", userInfo);
+      console.log("Form data studentId:", formData.studentId);
+      console.log("User studentId:", userInfo.studentId);
+      console.log(
+        "StudentId match:",
+        formData.studentId === userInfo.studentId
+      );
+
+      // Submit appeal to API
+      const response = await apiService.createAppeal(appealData);
+
+      console.log("Appeal submitted successfully:", response);
+
+      // Mark as submitted and show success
+      handleInputChange("submitted", true);
+
+      // Redirect to dashboard after 3 seconds
+      setTimeout(() => {
+        router.push("/student");
+      }, 3000);
+    } catch (error) {
+      console.error("Failed to submit appeal:", error);
+      setError(error.message || "Failed to submit appeal. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const renderStepContent = () => {
@@ -160,12 +268,12 @@ export default function NewAppealForm() {
                 <input
                   type="text"
                   value={formData.firstName}
-                  onChange={(e) =>
-                    handleInputChange("firstName", e.target.value)
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900"
-                  required
+                  readOnly
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600 cursor-not-allowed"
                 />
+                <p className="mt-1 text-xs text-gray-500">
+                  Auto-populated from your profile
+                </p>
               </div>
 
               <div>
@@ -175,12 +283,12 @@ export default function NewAppealForm() {
                 <input
                   type="text"
                   value={formData.lastName}
-                  onChange={(e) =>
-                    handleInputChange("lastName", e.target.value)
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900"
-                  required
+                  readOnly
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600 cursor-not-allowed"
                 />
+                <p className="mt-1 text-xs text-gray-500">
+                  Auto-populated from your profile
+                </p>
               </div>
 
               <div>
@@ -190,13 +298,14 @@ export default function NewAppealForm() {
                 <input
                   type="text"
                   value={formData.studentId}
-                  onChange={(e) =>
-                    handleInputChange("studentId", e.target.value)
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900"
-                  placeholder="e.g., 12345678"
-                  required
+                  readOnly
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600 cursor-not-allowed"
+                  placeholder="Auto-populated from your profile"
                 />
+                <p className="mt-1 text-xs text-gray-500">
+                  This field is automatically populated from your registered
+                  student profile
+                </p>
               </div>
 
               <div>
@@ -206,10 +315,12 @@ export default function NewAppealForm() {
                 <input
                   type="email"
                   value={formData.email}
-                  onChange={(e) => handleInputChange("email", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900"
-                  required
+                  readOnly
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-600 cursor-not-allowed"
                 />
+                <p className="mt-1 text-xs text-gray-500">
+                  Auto-populated from your profile
+                </p>
               </div>
 
               <div>
@@ -539,9 +650,21 @@ export default function NewAppealForm() {
                 </p>
                 <button
                   onClick={handleSubmit}
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 rounded-lg font-medium transition-colors"
+                  disabled={loading || !formData.confirmAll}
+                  className={`px-8 py-3 rounded-lg font-medium transition-colors ${
+                    loading || !formData.confirmAll
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-purple-600 hover:bg-purple-700 text-white"
+                  }`}
                 >
-                  Submit Appeal
+                  {loading ? (
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                      Submitting...
+                    </div>
+                  ) : (
+                    "Submit Appeal"
+                  )}
                 </button>
               </div>
             )}
@@ -562,99 +685,92 @@ export default function NewAppealForm() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b border-gray-200 py-4">
-        <div className="max-w-7xl mx-auto px-6 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <img
-                src="/images/logo.png"
-                alt="TUOS Logo"
-                className="w-30  object-contain"
-              />
-            </div>
-            <div className="flex items-center space-x-4">
-              <button className="text-gray-600 hover:text-purple-600 font-medium text-sm transition-colors">
-                Help
-              </button>
-              <button className="text-gray-600 hover:text-purple-600 font-medium text-sm transition-colors">
-                Contact
-              </button>
-              <button
-                onClick={() => router.push("/student")}
-                className="text-gray-600 hover:text-red-600 font-medium text-sm transition-colors"
-              >
-                Cancel
-              </button>
+    <ProtectedRoute requiredRole="student">
+      <div className="min-h-screen bg-gray-50">
+        <div className="bg-white border-b border-gray-200">
+          <div className="max-w-7xl mx-auto px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => router.push("/student")}
+                  className="text-gray-600 hover:text-red-600 font-medium text-sm transition-colors"
+                >
+                  ← Cancel
+                </button>
+              </div>
+              <div className="flex items-center">
+                {steps.map((step, index) => (
+                  <div key={step.id} className="flex items-center">
+                    <div
+                      className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
+                        step.id <= currentStep
+                          ? "bg-purple-600 text-white"
+                          : "bg-gray-200 text-gray-600"
+                      }`}
+                    >
+                      {step.id}
+                    </div>
+                    {index < steps.length - 1 && (
+                      <div
+                        className={`w-16 h-1 mx-2 ${
+                          step.id < currentStep
+                            ? "bg-purple-600"
+                            : "bg-gray-200"
+                        }`}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      </header>
 
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            {steps.map((step, index) => (
-              <div key={step.id} className="flex items-center">
-                <div
-                  className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-medium ${
-                    step.id <= currentStep
-                      ? "bg-purple-600 text-white"
-                      : "bg-gray-200 text-gray-600"
+        <div className="max-w-4xl mx-auto px-6 py-8">
+          <div className="bg-white rounded-lg shadow-lg p-8">
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                {steps[currentStep - 1].title}
+              </h2>
+              <p className="text-gray-600">
+                {steps[currentStep - 1].description}
+              </p>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
+
+            {renderStepContent()}
+
+            {currentStep !== 9 && (
+              <div className="flex justify-between mt-8 pt-6 border-t border-gray-200">
+                <button
+                  onClick={prevStep}
+                  disabled={currentStep === 1}
+                  className={`px-6 py-2 border border-gray-300 rounded-md font-medium ${
+                    currentStep === 1
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "text-gray-700 hover:bg-gray-50"
                   }`}
                 >
-                  {step.id}
-                </div>
-                {index < steps.length - 1 && (
-                  <div
-                    className={`w-16 h-1 mx-2 ${
-                      step.id < currentStep ? "bg-purple-600" : "bg-gray-200"
-                    }`}
-                  />
-                )}
+                  Previous
+                </button>
+
+                <button
+                  onClick={nextStep}
+                  className="px-6 py-2 bg-purple-600 text-white rounded-md font-medium hover:bg-purple-700 transition-colors"
+                >
+                  {currentStep === 8 ? "Submit" : "Next"}
+                </button>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>
-
-      <div className="max-w-4xl mx-auto px-6 py-8">
-        <div className="bg-white rounded-lg shadow-lg p-8">
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              {steps[currentStep - 1].title}
-            </h2>
-            <p className="text-gray-600">
-              {steps[currentStep - 1].description}
-            </p>
-          </div>
-
-          {renderStepContent()}
-
-          {currentStep !== 9 && (
-            <div className="flex justify-between mt-8 pt-6 border-t border-gray-200">
-              <button
-                onClick={prevStep}
-                disabled={currentStep === 1}
-                className={`px-6 py-2 border border-gray-300 rounded-md font-medium ${
-                  currentStep === 1
-                    ? "text-gray-400 cursor-not-allowed"
-                    : "text-gray-700 hover:bg-gray-50"
-                }`}
-              >
-                Previous
-              </button>
-
-              <button
-                onClick={nextStep}
-                className="px-6 py-2 bg-purple-600 text-white rounded-md font-medium hover:bg-purple-700 transition-colors"
-              >
-                {currentStep === 8 ? "Submit" : "Next"}
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
+    </ProtectedRoute>
   );
 }

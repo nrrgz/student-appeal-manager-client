@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
+import ProtectedRoute from "../../../components/ProtectedRoute";
 
 export default function AppealReview() {
   const [userInfo, setUserInfo] = useState(null);
@@ -226,357 +227,333 @@ export default function AppealReview() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white shadow-sm border-b border-gray-200 py-4">
-        <div className="max-w-7xl mx-auto px-6 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <img
-                src="/images/logo.png"
-                alt="TUOS Logo"
-                className="w-30 object-contain"
-              />
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-gray-700">
-                Welcome, {userInfo.name}
-              </span>
+    <ProtectedRoute requiredRole="reviewer">
+      <div className="min-h-screen bg-gray-50">
+        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+          <div className="px-4 py-6 sm:px-0">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">
+                  Appeal Review - {appeal.id}
+                </h1>
+                <p className="text-gray-600 mt-1">
+                  Reviewing appeal for {appeal.studentName}
+                </p>
+              </div>
               <button
-                onClick={() => {
-                  localStorage.removeItem("userInfo");
-                  router.push("/login");
-                }}
-                className="text-sm text-purple-600 hover:text-purple-800"
+                onClick={() => router.push("/reviewer")}
+                className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
               >
-                Sign Out
+                Back to Dashboard
               </button>
             </div>
-          </div>
-        </div>
-      </header>
 
-      <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div className="px-4 py-6 sm:px-0">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                Appeal Review - {appeal.id}
-              </h1>
-              <p className="text-gray-600 mt-1">
-                Reviewing appeal for {appeal.studentName}
-              </p>
-            </div>
-            <button
-              onClick={() => router.push("/reviewer")}
-              className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
-            >
-              Back to Dashboard
-            </button>
-          </div>
-
-          {/* Status and Priority */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-            <div className="bg-white shadow rounded-lg p-4">
-              <h3 className="text-sm font-medium text-gray-500">Status</h3>
-              <span
-                className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full mt-1 ${getStatusColor(
-                  appeal.status
-                )}`}
-              >
-                {appeal.status}
-              </span>
-            </div>
-            <div className="bg-white shadow rounded-lg p-4">
-              <h3 className="text-sm font-medium text-gray-500">Priority</h3>
-              <span
-                className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full mt-1 ${getPriorityColor(
-                  appeal.priority
-                )}`}
-              >
-                {appeal.priority}
-              </span>
-            </div>
-            <div className="bg-white shadow rounded-lg p-4">
-              <h3 className="text-sm font-medium text-gray-500">Deadline</h3>
-              <p className="text-sm font-medium text-gray-900 mt-1">
-                {new Date(appeal.deadline).toLocaleDateString()}
-              </p>
-            </div>
-            <div className="bg-white shadow rounded-lg p-4">
-              <h3 className="text-sm font-medium text-gray-500">
-                Review Deadline
-              </h3>
-              <p className="text-sm font-medium text-gray-900 mt-1">
-                {new Date(appeal.reviewDeadline).toLocaleDateString()}
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Main Content */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Student Information */}
-              <div className="bg-white shadow rounded-lg p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Student Information
+            {/* Status and Priority */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+              <div className="bg-white shadow rounded-lg p-4">
+                <h3 className="text-sm font-medium text-gray-500">Status</h3>
+                <span
+                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full mt-1 ${getStatusColor(
+                    appeal.status
+                  )}`}
+                >
+                  {appeal.status}
+                </span>
+              </div>
+              <div className="bg-white shadow rounded-lg p-4">
+                <h3 className="text-sm font-medium text-gray-500">Priority</h3>
+                <span
+                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full mt-1 ${getPriorityColor(
+                    appeal.priority
+                  )}`}
+                >
+                  {appeal.priority}
+                </span>
+              </div>
+              <div className="bg-white shadow rounded-lg p-4">
+                <h3 className="text-sm font-medium text-gray-500">Deadline</h3>
+                <p className="text-sm font-medium text-gray-900 mt-1">
+                  {new Date(appeal.deadline).toLocaleDateString()}
+                </p>
+              </div>
+              <div className="bg-white shadow rounded-lg p-4">
+                <h3 className="text-sm font-medium text-gray-500">
+                  Review Deadline
                 </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-500">Name</p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {appeal.studentName}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Student ID</p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {appeal.studentId}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Email</p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {appeal.studentEmail}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Department</p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {appeal.department}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Course</p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {appeal.course}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Submission Date</p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {new Date(appeal.submissionDate).toLocaleDateString()}
-                    </p>
+                <p className="text-sm font-medium text-gray-900 mt-1">
+                  {new Date(appeal.reviewDeadline).toLocaleDateString()}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Main Content */}
+              <div className="lg:col-span-2 space-y-6">
+                {/* Student Information */}
+                <div className="bg-white shadow rounded-lg p-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    Student Information
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-500">Name</p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {appeal.studentName}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Student ID</p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {appeal.studentId}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Email</p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {appeal.studentEmail}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Department</p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {appeal.department}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Course</p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {appeal.course}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Submission Date</p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {new Date(appeal.submissionDate).toLocaleDateString()}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Appeal Details */}
-              <div className="bg-white shadow rounded-lg p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Appeal Details
-                </h3>
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm text-gray-500">Grounds for Appeal</p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {appeal.grounds}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Description</p>
-                    <p className="text-sm text-gray-900 whitespace-pre-wrap">
-                      {appeal.description}
-                    </p>
+                {/* Appeal Details */}
+                <div className="bg-white shadow rounded-lg p-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    Appeal Details
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <p className="text-sm text-gray-500">
+                        Grounds for Appeal
+                      </p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {appeal.grounds}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Description</p>
+                      <p className="text-sm text-gray-900 whitespace-pre-wrap">
+                        {appeal.description}
+                      </p>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Evidence */}
-              <div className="bg-white shadow rounded-lg p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Supporting Evidence
-                </h3>
-                <div className="space-y-3">
-                  {appeal.evidence.map((doc, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
-                    >
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {doc.name}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {doc.type} • Uploaded {doc.uploadedAt}
-                        </p>
+                {/* Evidence */}
+                <div className="bg-white shadow rounded-lg p-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    Supporting Evidence
+                  </h3>
+                  <div className="space-y-3">
+                    {appeal.evidence.map((doc, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
+                      >
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">
+                            {doc.name}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {doc.type} • Uploaded {doc.uploadedAt}
+                          </p>
+                        </div>
+                        <button className="text-purple-600 hover:text-purple-800 text-sm font-medium">
+                          View
+                        </button>
                       </div>
-                      <button className="text-purple-600 hover:text-purple-800 text-sm font-medium">
-                        View
+                    ))}
+                  </div>
+                </div>
+
+                {/* Academic History */}
+                <div className="bg-white shadow rounded-lg p-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    Academic History
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-500">Previous Grades</p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {appeal.academicHistory.previousGrades.join(", ")}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Attendance</p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {appeal.academicHistory.attendance}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Previous Appeals</p>
+                      <p className="text-sm font-medium text-gray-900">
+                        {appeal.academicHistory.previousAppeals}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Sidebar */}
+              <div className="space-y-6">
+                {/* Review Actions */}
+                <div className="bg-white shadow rounded-lg p-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    Review Actions
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Status Update
+                      </label>
+                      <select
+                        value={newStatus}
+                        onChange={(e) => setNewStatus(e.target.value)}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900"
+                      >
+                        <option value="Under Review">Under Review</option>
+                        <option value="Awaiting Info">Awaiting Info</option>
+                        <option value="Review Complete">Review Complete</option>
+                        <option value="Referred to Panel">
+                          Referred to Panel
+                        </option>
+                      </select>
+                      <button
+                        onClick={handleStatusChange}
+                        className="mt-2 w-full bg-blue-600 text-white px-3 py-2 rounded-md text-sm hover:bg-blue-700"
+                      >
+                        Update Status
                       </button>
                     </div>
-                  ))}
-                </div>
-              </div>
 
-              {/* Academic History */}
-              <div className="bg-white shadow rounded-lg p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Academic History
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-500">Previous Grades</p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {appeal.academicHistory.previousGrades.join(", ")}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Attendance</p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {appeal.academicHistory.attendance}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-500">Previous Appeals</p>
-                    <p className="text-sm font-medium text-gray-900">
-                      {appeal.academicHistory.previousAppeals}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Recommendation
+                      </label>
+                      <textarea
+                        value={recommendation}
+                        onChange={(e) => setRecommendation(e.target.value)}
+                        placeholder="Enter your recommendation..."
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm h-20 text-gray-900"
+                      />
+                    </div>
 
-            {/* Sidebar */}
-            <div className="space-y-6">
-              {/* Review Actions */}
-              <div className="bg-white shadow rounded-lg p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Review Actions
-                </h3>
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Status Update
-                    </label>
-                    <select
-                      value={newStatus}
-                      onChange={(e) => setNewStatus(e.target.value)}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900"
-                    >
-                      <option value="Under Review">Under Review</option>
-                      <option value="Awaiting Info">Awaiting Info</option>
-                      <option value="Review Complete">Review Complete</option>
-                      <option value="Referred to Panel">
-                        Referred to Panel
-                      </option>
-                    </select>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Decision
+                      </label>
+                      <select
+                        value={decision}
+                        onChange={(e) => setDecision(e.target.value)}
+                        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900"
+                      >
+                        <option value="">Select decision...</option>
+                        <option value="Appeal Upheld">Appeal Upheld</option>
+                        <option value="Appeal Rejected">Appeal Rejected</option>
+                        <option value="Partial Uphold">Partial Uphold</option>
+                        <option value="Referred to Academic Panel">
+                          Referred to Academic Panel
+                        </option>
+                      </select>
+                    </div>
+
                     <button
-                      onClick={handleStatusChange}
-                      className="mt-2 w-full bg-blue-600 text-white px-3 py-2 rounded-md text-sm hover:bg-blue-700"
+                      onClick={handleSubmitReview}
+                      disabled={!recommendation.trim() || !decision.trim()}
+                      className="w-full bg-purple-600 text-white px-3 py-2 rounded-md text-sm hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
-                      Update Status
+                      Submit Review
                     </button>
                   </div>
+                </div>
 
+                {/* Internal Notes */}
+                <div className="bg-white shadow rounded-lg p-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    Internal Notes
+                  </h3>
+                  <div className="space-y-3 mb-4">
+                    {appeal.internalNotes.map((note, index) => (
+                      <div key={index} className="text-sm">
+                        <p className="text-gray-900">{note.note}</p>
+                        <p className="text-gray-500 text-xs mt-1">
+                          {note.admin} • {note.timestamp}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Recommendation
-                    </label>
                     <textarea
-                      value={recommendation}
-                      onChange={(e) => setRecommendation(e.target.value)}
-                      placeholder="Enter your recommendation..."
+                      value={newNote}
+                      onChange={(e) => setNewNote(e.target.value)}
+                      placeholder="Add internal note..."
                       className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm h-20 text-gray-900"
                     />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Decision
-                    </label>
-                    <select
-                      value={decision}
-                      onChange={(e) => setDecision(e.target.value)}
-                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900"
+                    <button
+                      onClick={handleAddNote}
+                      disabled={!newNote.trim()}
+                      className="mt-2 w-full bg-gray-600 text-white px-3 py-2 rounded-md text-sm hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
-                      <option value="">Select decision...</option>
-                      <option value="Appeal Upheld">Appeal Upheld</option>
-                      <option value="Appeal Rejected">Appeal Rejected</option>
-                      <option value="Partial Uphold">Partial Uphold</option>
-                      <option value="Referred to Academic Panel">
-                        Referred to Academic Panel
-                      </option>
-                    </select>
+                      Add Note
+                    </button>
                   </div>
+                </div>
 
-                  <button
-                    onClick={handleSubmitReview}
-                    disabled={!recommendation.trim() || !decision.trim()}
-                    className="w-full bg-purple-600 text-white px-3 py-2 rounded-md text-sm hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                  >
-                    Submit Review
-                  </button>
-                </div>
-              </div>
-
-              {/* Internal Notes */}
-              <div className="bg-white shadow rounded-lg p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Internal Notes
-                </h3>
-                <div className="space-y-3 mb-4">
-                  {appeal.internalNotes.map((note, index) => (
-                    <div key={index} className="text-sm">
-                      <p className="text-gray-900">{note.note}</p>
-                      <p className="text-gray-500 text-xs mt-1">
-                        {note.admin} • {note.timestamp}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-                <div>
-                  <textarea
-                    value={newNote}
-                    onChange={(e) => setNewNote(e.target.value)}
-                    placeholder="Add internal note..."
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm h-20 text-gray-900"
-                  />
-                  <button
-                    onClick={handleAddNote}
-                    disabled={!newNote.trim()}
-                    className="mt-2 w-full bg-gray-600 text-white px-3 py-2 rounded-md text-sm hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                  >
-                    Add Note
-                  </button>
-                </div>
-              </div>
-
-              {/* Student Comments */}
-              <div className="bg-white shadow rounded-lg p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Student Comments
-                </h3>
-                <div className="space-y-3 mb-4">
-                  {appeal.comments.map((comment, index) => (
-                    <div key={index} className="text-sm">
-                      <p className="text-gray-900">{comment.comment}</p>
-                      <p className="text-gray-500 text-xs mt-1">
-                        {comment.admin} • {comment.timestamp}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-                <div>
-                  <textarea
-                    value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
-                    placeholder="Add comment visible to student..."
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm h-20 text-gray-900"
-                  />
-                  <button
-                    onClick={handleAddComment}
-                    disabled={!newComment.trim()}
-                    className="mt-2 w-full bg-green-600 text-white px-3 py-2 rounded-md text-sm hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
-                  >
-                    Add Comment
-                  </button>
+                {/* Student Comments */}
+                <div className="bg-white shadow rounded-lg p-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    Student Comments
+                  </h3>
+                  <div className="space-y-3 mb-4">
+                    {appeal.comments.map((comment, index) => (
+                      <div key={index} className="text-sm">
+                        <p className="text-gray-900">{comment.comment}</p>
+                        <p className="text-gray-500 text-xs mt-1">
+                          {comment.admin} • {comment.timestamp}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                  <div>
+                    <textarea
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      placeholder="Add comment visible to student..."
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm h-20 text-gray-900"
+                    />
+                    <button
+                      onClick={handleAddComment}
+                      disabled={!newComment.trim()}
+                      className="mt-2 w-full bg-green-600 text-white px-3 py-2 rounded-md text-sm hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                    >
+                      Add Comment
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      </main>
-    </div>
+        </main>
+      </div>
+    </ProtectedRoute>
   );
 }
