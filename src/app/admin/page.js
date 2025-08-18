@@ -3,10 +3,17 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ProtectedRoute from "../../components/ProtectedRoute";
+import apiService from "../../services/api";
 
 export default function AdminDashboard() {
   const [appeals, setAppeals] = useState([]);
   const [filteredAppeals, setFilteredAppeals] = useState([]);
+  const [dashboardStats, setDashboardStats] = useState({
+    total: 0,
+    pending: 0,
+    resolved: 0,
+    highPriority: 0,
+  });
   const [filters, setFilters] = useState({
     department: "",
     status: "",
@@ -14,6 +21,7 @@ export default function AdminDashboard() {
     grounds: "",
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
 
   // Check authentication
@@ -33,45 +41,68 @@ export default function AdminDashboard() {
     setUserInfo(user);
   }, []);
 
-  // Mock data - replace with actual API calls
+  // Fetch appeals and dashboard data
   useEffect(() => {
-    const mockAppeals = [
-      {
-        id: 1,
-        studentName: "John Doe",
-        studentId: "STU001",
-        department: "Computer Science",
-        status: "Pending",
-        grounds: "Late Submission",
-        submissionDate: "2024-01-15",
-        priority: "High",
-      },
-      {
-        id: 2,
-        studentName: "Jane Smith",
-        studentId: "STU002",
-        department: "Mathematics",
-        status: "In Review",
-        grounds: "Medical Circumstances",
-        submissionDate: "2024-01-14",
-        priority: "Medium",
-      },
-      {
-        id: 3,
-        studentName: "Mike Johnson",
-        studentId: "STU003",
-        department: "Physics",
-        status: "Awaiting Info",
-        grounds: "Technical Issues",
-        submissionDate: "2024-01-13",
-        priority: "Low",
-      },
-    ];
+    if (userInfo) {
+      fetchData();
+    }
+  }, [userInfo]);
 
-    setAppeals(mockAppeals);
-    setFilteredAppeals(mockAppeals);
-    setLoading(false);
-  }, []);
+  const fetchData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Fetch appeals and dashboard data in parallel
+      const [appealsResponse, dashboardResponse] = await Promise.all([
+        apiService.getAdminAppeals(),
+        apiService.getAdminDashboard(),
+      ]);
+
+      // Process appeals data
+      const formattedAppeals = appealsResponse.appeals.map((appeal) => ({
+        id: appeal._id,
+        studentName: appeal.student
+          ? `${appeal.student.firstName} ${appeal.student.lastName}`
+          : "Unknown Student",
+        studentId: appeal.student?.studentId || "N/A",
+        department: appeal.student?.department || "N/A",
+        status: appeal.status || "Pending",
+        grounds: appeal.appealType || "N/A",
+        submissionDate: appeal.createdAt,
+        priority: appeal.priority || "Medium",
+        assignedReviewer: appeal.assignedReviewer
+          ? `${appeal.assignedReviewer.firstName} ${appeal.assignedReviewer.lastName}`
+          : "Unassigned",
+      }));
+
+      setAppeals(formattedAppeals);
+      setFilteredAppeals(formattedAppeals);
+
+      // Process dashboard statistics
+      const stats = dashboardResponse.statusSummary;
+      setDashboardStats({
+        total: dashboardResponse.total || 0,
+        pending: stats.submitted || 0,
+        resolved: (stats.resolved || 0) + (stats["decision made"] || 0),
+        highPriority: 0, // Will be calculated from appeals data
+      });
+
+      // Calculate high priority count
+      const highPriorityCount = formattedAppeals.filter(
+        (appeal) => appeal.priority === "high" || appeal.priority === "urgent"
+      ).length;
+      setDashboardStats((prev) => ({
+        ...prev,
+        highPriority: highPriorityCount,
+      }));
+    } catch (error) {
+      console.error("Failed to fetch admin data:", error);
+      setError("Failed to load dashboard data. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleFilterChange = (key, value) => {
     const newFilters = { ...filters, [key]: value };
@@ -99,17 +130,44 @@ export default function AdminDashboard() {
       );
     }
 
+    if (newFilters.date) {
+      const filterDate = new Date(newFilters.date);
+      filtered = filtered.filter((appeal) => {
+        const appealDate = new Date(appeal.submissionDate);
+        return appealDate.toDateString() === filterDate.toDateString();
+      });
+    }
+
     setFilteredAppeals(filtered);
+  };
+
+  const clearFilters = () => {
+    setFilters({
+      department: "",
+      status: "",
+      date: "",
+      grounds: "",
+    });
+    setFilteredAppeals(appeals);
+  };
+
+  const refreshData = () => {
+    fetchData();
   };
 
   const getStatusColor = (status) => {
     switch (status) {
+      case "submitted":
       case "Pending":
         return "bg-yellow-100 text-yellow-800";
+      case "under review":
       case "In Review":
         return "bg-blue-100 text-blue-800";
+      case "awaiting information":
       case "Awaiting Info":
         return "bg-orange-100 text-orange-800";
+      case "resolved":
+      case "decision made":
       case "Resolved":
         return "bg-green-100 text-green-800";
       default:
@@ -119,11 +177,12 @@ export default function AdminDashboard() {
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case "High":
+      case "high":
+      case "urgent":
         return "bg-red-100 text-red-800";
-      case "Medium":
+      case "medium":
         return "bg-yellow-100 text-yellow-800";
-      case "Low":
+      case "low":
         return "bg-green-100 text-green-800";
       default:
         return "bg-gray-100 text-gray-800";
@@ -133,7 +192,10 @@ export default function AdminDashboard() {
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+        </div>
       </div>
     );
   }
@@ -141,7 +203,10 @@ export default function AdminDashboard() {
   if (!userInfo) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-xl">Loading...</div>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-purple-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading user information...</p>
+        </div>
       </div>
     );
   }
@@ -150,6 +215,54 @@ export default function AdminDashboard() {
     <ProtectedRoute requiredRole="admin">
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Header with refresh button */}
+          <div className="flex items-center justify-between mb-8">
+            <h1 className="text-3xl font-bold text-gray-900">
+              Admin Dashboard
+            </h1>
+            <button
+              onClick={refreshData}
+              className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 transition-colors"
+            >
+              Refresh Data
+            </button>
+          </div>
+
+          {/* Error Display */}
+          {error && (
+            <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg
+                    className="h-5 w-5 text-red-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800">Error</h3>
+                  <div className="mt-2 text-sm text-red-700">
+                    <p>{error}</p>
+                  </div>
+                  <div className="mt-4">
+                    <button
+                      onClick={fetchData}
+                      className="bg-red-100 text-red-800 px-3 py-2 rounded-md text-sm font-medium hover:bg-red-200"
+                    >
+                      Try Again
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Stats Overview */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div className="bg-white rounded-lg shadow p-6">
@@ -170,7 +283,7 @@ export default function AdminDashboard() {
                     Total Appeals
                   </p>
                   <p className="text-2xl font-semibold text-gray-900">
-                    {appeals.length}
+                    {dashboardStats.total}
                   </p>
                 </div>
               </div>
@@ -196,7 +309,7 @@ export default function AdminDashboard() {
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">Pending</p>
                   <p className="text-2xl font-semibold text-gray-900">
-                    {appeals.filter((a) => a.status === "Pending").length}
+                    {dashboardStats.pending}
                   </p>
                 </div>
               </div>
@@ -222,7 +335,7 @@ export default function AdminDashboard() {
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-500">Resolved</p>
                   <p className="text-2xl font-semibold text-gray-900">
-                    {appeals.filter((a) => a.status === "Resolved").length}
+                    {dashboardStats.resolved}
                   </p>
                 </div>
               </div>
@@ -250,7 +363,7 @@ export default function AdminDashboard() {
                     High Priority
                   </p>
                   <p className="text-2xl font-semibold text-gray-900">
-                    {appeals.filter((a) => a.priority === "High").length}
+                    {dashboardStats.highPriority}
                   </p>
                 </div>
               </div>
@@ -260,7 +373,15 @@ export default function AdminDashboard() {
           {/* Filters */}
           <div className="bg-white rounded-lg shadow mb-6">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">Filters</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium text-gray-900">Filters</h3>
+                <button
+                  onClick={clearFilters}
+                  className="text-sm text-gray-500 hover:text-gray-700"
+                >
+                  Clear All
+                </button>
+              </div>
             </div>
             <div className="px-6 py-4">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -291,10 +412,11 @@ export default function AdminDashboard() {
                     }
                   >
                     <option value="">All Statuses</option>
-                    <option value="Pending">Pending</option>
-                    <option value="In Review">In Review</option>
-                    <option value="Awaiting Info">Awaiting Info</option>
-                    <option value="Resolved">Resolved</option>
+                    <option value="submitted">Submitted</option>
+                    <option value="under review">Under Review</option>
+                    <option value="awaiting information">Awaiting Info</option>
+                    <option value="decision made">Decision Made</option>
+                    <option value="resolved">Resolved</option>
                   </select>
                 </div>
 
@@ -331,7 +453,14 @@ export default function AdminDashboard() {
           {/* Appeals Table */}
           <div className="bg-white rounded-lg shadow">
             <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">All Appeals</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-medium text-gray-900">
+                  All Appeals ({filteredAppeals.length})
+                </h3>
+                <span className="text-sm text-gray-500">
+                  Showing {filteredAppeals.length} of {appeals.length} appeals
+                </span>
+              </div>
             </div>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200">
@@ -361,58 +490,71 @@ export default function AdminDashboard() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {filteredAppeals.map((appeal) => (
-                    <tr key={appeal.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <div>
-                          <div className="text-sm font-medium text-gray-900">
-                            {appeal.studentName}
+                  {filteredAppeals.length > 0 ? (
+                    filteredAppeals.map((appeal) => (
+                      <tr key={appeal.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">
+                              {appeal.studentName}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {appeal.studentId}
+                            </div>
                           </div>
-                          <div className="text-sm text-gray-500">
-                            {appeal.studentId}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {appeal.department}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
-                            appeal.status
-                          )}`}
-                        >
-                          {appeal.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {appeal.grounds}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span
-                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(
-                            appeal.priority
-                          )}`}
-                        >
-                          {appeal.priority}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                        {new Date(appeal.submissionDate).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <a
-                          href={`/admin/${appeal.id}`}
-                          className="text-indigo-600 hover:text-indigo-900 mr-4"
-                        >
-                          View
-                        </a>
-                        <button className="text-gray-600 hover:text-gray-900">
-                          Edit
-                        </button>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {appeal.department}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span
+                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(
+                              appeal.status
+                            )}`}
+                          >
+                            {appeal.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {appeal.grounds}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span
+                            className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(
+                              appeal.priority
+                            )}`}
+                          >
+                            {appeal.priority}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {new Date(appeal.submissionDate).toLocaleDateString()}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <a
+                            href={`/admin/${appeal.id}`}
+                            className="text-indigo-600 hover:text-indigo-900 mr-4"
+                          >
+                            View
+                          </a>
+                          <button className="text-gray-600 hover:text-gray-900">
+                            Edit
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan="7"
+                        className="px-6 py-4 text-center text-gray-500"
+                      >
+                        {appeals.length === 0
+                          ? "No appeals found in the system."
+                          : "No appeals match the current filters."}
                       </td>
                     </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>

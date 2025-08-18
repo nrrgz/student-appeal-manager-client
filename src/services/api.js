@@ -152,35 +152,142 @@ class ApiService {
   }
 
   // Reviewer methods
-  async getReviewerAppeals(filters = {}) {
-    const queryParams = new URLSearchParams();
-    if (filters.status) queryParams.append("status", filters.status);
-    if (filters.appealType)
-      queryParams.append("appealType", filters.appealType);
-    if (filters.page) queryParams.append("page", filters.page);
-    if (filters.limit) queryParams.append("limit", filters.limit);
-
-    const endpoint = `/reviewer/appeals${
-      queryParams.toString() ? `?${queryParams.toString()}` : ""
-    }`;
-    return this.request(endpoint);
+  async getReviewerAppeals() {
+    return this.request("/reviewer/appeals");
   }
 
   async getReviewerAppeal(appealId) {
     return this.request(`/reviewer/appeals/${appealId}`);
   }
 
-  async updateAppealStatus(appealId, statusData) {
+  async updateAppealStatus(appealId, data) {
     return this.request(`/reviewer/appeals/${appealId}/status`, {
       method: "PUT",
-      body: JSON.stringify(statusData),
+      body: JSON.stringify(data),
     });
   }
 
-  async addAppealNote(appealId, noteData) {
+  async addAppealNote(appealId, data) {
     return this.request(`/reviewer/appeals/${appealId}/notes`, {
       method: "POST",
-      body: JSON.stringify(noteData),
+      body: JSON.stringify(data),
+    });
+  }
+
+  // Admin methods
+  async getAdminAppeals(filters = {}) {
+    const queryParams = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) queryParams.append(key, value);
+    });
+
+    const endpoint = queryParams.toString()
+      ? `/admin/appeals?${queryParams.toString()}`
+      : "/admin/appeals";
+
+    return this.request(endpoint);
+  }
+
+  async getAdminAppeal(appealId) {
+    return this.request(`/admin/appeals/${appealId}`);
+  }
+
+  async getAdminDashboard() {
+    return this.request("/admin/appeals/dashboard");
+  }
+
+  async updateAppealAssignment(appealId, data) {
+    return this.request(`/admin/appeals/${appealId}/assign`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateAppealStatusAdmin(appealId, data) {
+    return this.request(`/admin/appeals/${appealId}/status`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async updateAppealPriority(appealId, data) {
+    return this.request(`/admin/appeals/${appealId}/priority`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async addAdminNote(appealId, data) {
+    return this.request(`/admin/appeals/${appealId}/notes`, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async bulkAssignAppeals(data) {
+    return this.request("/admin/appeals/bulk-assign", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async searchAppeals(filters = {}) {
+    const queryParams = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) queryParams.append(key, value);
+    });
+
+    const endpoint = queryParams.toString()
+      ? `/admin/appeals/search?${queryParams.toString()}`
+      : "/admin/appeals/search";
+
+    return this.request(endpoint);
+  }
+
+  async getAppealReports(filters = {}) {
+    const queryParams = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) queryParams.append(key, value);
+    });
+
+    const endpoint = queryParams.toString()
+      ? `/admin/reports/appeals?${queryParams.toString()}`
+      : "/admin/reports/appeals";
+
+    return this.request(endpoint);
+  }
+
+  async getUsers(filters = {}) {
+    const queryParams = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) queryParams.append(key, value);
+    });
+
+    const endpoint = queryParams.toString()
+      ? `/admin/users?${queryParams.toString()}`
+      : "/admin/users";
+
+    return this.request(endpoint);
+  }
+
+  async getReviewers() {
+    return this.request("/admin/users/reviewers");
+  }
+
+  async getUserStats() {
+    return this.request("/admin/users/stats");
+  }
+
+  async updateUser(userId, data) {
+    return this.request(`/admin/users/${userId}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async deactivateUser(userId) {
+    return this.request(`/admin/users/${userId}`, {
+      method: "DELETE",
     });
   }
 }

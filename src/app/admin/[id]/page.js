@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
 import ProtectedRoute from "../../../components/ProtectedRoute";
+import apiService from "../../../services/api";
 
 export default function AppealManagement() {
   const params = useParams();
@@ -10,12 +11,14 @@ export default function AppealManagement() {
 
   const [appeal, setAppeal] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [newNote, setNewNote] = useState("");
   const [newComment, setNewComment] = useState("");
   const [newStatus, setNewStatus] = useState("");
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   // Check authentication
   useEffect(() => {
@@ -34,128 +37,88 @@ export default function AppealManagement() {
     setUserInfo(user);
   }, []);
 
-  // Mock data - replace with actual API calls
+  // Fetch appeal data
   useEffect(() => {
-    const mockAppeal = {
-      id: appealId,
-      studentName: "John Doe",
-      studentId: "STU001",
-      studentEmail: "john.doe@university.edu",
-      department: "Computer Science",
-      course: "CS101 - Introduction to Programming",
-      status: "In Review",
-      grounds: "Late Submission",
-      submissionDate: "2024-01-15",
-      priority: "High",
-      description:
-        "I was unable to submit my assignment on time due to a family emergency that required my immediate attention. I have attached supporting documentation.",
-      evidence: [
-        {
-          name: "medical_certificate.pdf",
-          type: "Medical Certificate",
-          uploadedAt: "2024-01-15",
-        },
-        {
-          name: "family_emergency_letter.pdf",
-          type: "Family Emergency Letter",
-          uploadedAt: "2024-01-15",
-        },
-      ],
-      internalNotes: [
-        {
-          note: "Student provided medical documentation. Need to verify authenticity.",
-          admin: "Admin User",
-          timestamp: "2024-01-16 10:30",
-        },
-        {
-          note: "Contacted medical office for verification. Awaiting response.",
-          admin: "Admin User",
-          timestamp: "2024-01-16 14:15",
-        },
-      ],
-      comments: [
-        {
-          comment:
-            "Thank you for your submission. We are reviewing your case and will get back to you within 3-5 business days.",
-          admin: "Admin User",
-          timestamp: "2024-01-16 10:30",
-          visibleToStudent: true,
-        },
-        {
-          comment:
-            "We have received your supporting documents and are currently reviewing them.",
-          admin: "Admin User",
-          timestamp: "2024-01-16 14:15",
-          visibleToStudent: true,
-        },
-      ],
-      staffDocuments: [
-        {
-          name: "verification_request.pdf",
-          type: "Verification Request",
-          uploadedAt: "2024-01-16 14:15",
-          admin: "Admin User",
-        },
-      ],
-    };
-
-    setAppeal(mockAppeal);
-    setNewStatus(mockAppeal.status);
-    setLoading(false);
+    if (appealId) {
+      fetchAppeal();
+    }
   }, [appealId]);
 
-  const handleAddNote = () => {
-    if (!newNote.trim()) return;
-
-    const note = {
-      note: newNote,
-      admin: "Admin User",
-      timestamp: new Date().toLocaleString(),
-    };
-
-    setAppeal((prev) => ({
-      ...prev,
-      internalNotes: [...prev.internalNotes, note],
-    }));
-    setNewNote("");
+  const fetchAppeal = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await apiService.getAdminAppeal(appealId);
+      setAppeal(response.appeal);
+      setNewStatus(response.appeal.status);
+    } catch (error) {
+      console.error("Failed to fetch appeal:", error);
+      setError("Failed to load appeal data. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleAddComment = () => {
-    if (!newComment.trim()) return;
+  const handleAddNote = async () => {
+    if (!newNote.trim() || submitting) return;
 
-    const comment = {
-      comment: newComment,
-      admin: "Admin User",
-      timestamp: new Date().toLocaleString(),
-      visibleToStudent: true,
-    };
+    try {
+      setSubmitting(true);
+      await apiService.addAdminNote(appealId, {
+        content: newNote,
+        isInternal: true,
+      });
 
-    setAppeal((prev) => ({
-      ...prev,
-      comments: [...prev.comments, comment],
-    }));
-    setNewComment("");
+      // Refresh appeal data to get the new note
+      await fetchAppeal();
+      setNewNote("");
+    } catch (error) {
+      console.error("Failed to add note:", error);
+      setError("Failed to add note. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleStatusChange = () => {
-    if (!newStatus) return;
+  const handleAddComment = async () => {
+    if (!newComment.trim() || submitting) return;
 
-    setAppeal((prev) => ({
-      ...prev,
-      status: newStatus,
-    }));
+    try {
+      setSubmitting(true);
+      await apiService.addAdminNote(appealId, {
+        content: newComment,
+        isInternal: false,
+      });
 
-    // Add a note about status change
-    const note = {
-      note: `Status changed to: ${newStatus}`,
-      admin: "Admin User",
-      timestamp: new Date().toLocaleString(),
-    };
+      // Refresh appeal data to get the new comment
+      await fetchAppeal();
+      setNewComment("");
+    } catch (error) {
+      console.error("Failed to add comment:", error);
+      setError("Failed to add comment. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
-    setAppeal((prev) => ({
-      ...prev,
-      internalNotes: [...prev.internalNotes, note],
-    }));
+  const handleStatusChange = async () => {
+    if (!newStatus || submitting) return;
+
+    try {
+      setSubmitting(true);
+      await apiService.updateAppealStatusAdmin(appealId, {
+        status: newStatus,
+        reason: `Status updated by admin: ${userInfo?.firstName || "Admin"}`,
+      });
+
+      // Refresh appeal data to get the updated status
+      await fetchAppeal();
+    } catch (error) {
+      console.error("Failed to update status:", error);
+      setError("Failed to update status. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleFileUpload = (event) => {
@@ -165,35 +128,49 @@ export default function AppealManagement() {
     }
   };
 
-  const handleUploadDocument = () => {
-    if (!uploadedFile) return;
+  const handleUploadDocument = async () => {
+    if (!uploadedFile || submitting) return;
 
-    const document = {
-      name: uploadedFile.name,
-      type: "Staff Document",
-      uploadedAt: new Date().toLocaleString(),
-      admin: "Admin User",
-    };
+    try {
+      setSubmitting(true);
+      // For now, we'll just add it to the local state
+      // In a real implementation, you'd upload to the server
+      const document = {
+        name: uploadedFile.name,
+        type: "Staff Document",
+        uploadedAt: new Date().toLocaleString(),
+        admin: userInfo?.firstName || "Admin",
+      };
 
-    setAppeal((prev) => ({
-      ...prev,
-      staffDocuments: [...prev.staffDocuments, document],
-    }));
+      setAppeal((prev) => ({
+        ...prev,
+        staffDocuments: [...prev.staffDocuments, document],
+      }));
 
-    setUploadedFile(null);
-    setShowUploadForm(false);
+      setUploadedFile(null);
+      setShowUploadForm(false);
+    } catch (error) {
+      console.error("Failed to upload document:", error);
+      setError("Failed to upload document. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "Pending":
+      case "submitted":
         return "bg-yellow-100 text-yellow-800";
-      case "In Review":
+      case "under review":
         return "bg-blue-100 text-blue-800";
-      case "Awaiting Info":
+      case "awaiting information":
         return "bg-orange-100 text-orange-800";
-      case "Resolved":
+      case "decision made":
+        return "bg-purple-100 text-purple-800";
+      case "resolved":
         return "bg-green-100 text-green-800";
+      case "rejected":
+        return "bg-red-100 text-red-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -201,14 +178,25 @@ export default function AppealManagement() {
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case "High":
+      case "urgent":
         return "bg-red-100 text-red-800";
-      case "Medium":
+      case "high":
+        return "bg-orange-100 text-orange-800";
+      case "medium":
         return "bg-yellow-100 text-yellow-800";
-      case "Low":
+      case "low":
         return "bg-green-100 text-green-800";
       default:
         return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "Unknown date";
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch (error) {
+      return "Invalid date";
     }
   };
 
@@ -231,7 +219,7 @@ export default function AppealManagement() {
   if (!appeal) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-xl">Appeal not found</div>
+        <div className="text-xl">{error ? error : "Appeal not found"}</div>
       </div>
     );
   }
@@ -240,6 +228,49 @@ export default function AppealManagement() {
     <ProtectedRoute requiredRole="admin">
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Error Display */}
+          {error && (
+            <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg
+                    className="h-5 w-5 text-red-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-red-800">{error}</p>
+                </div>
+                <div className="ml-auto pl-3">
+                  <button
+                    onClick={() => setError(null)}
+                    className="inline-flex text-red-400 hover:text-red-600"
+                  >
+                    <span className="sr-only">Dismiss</span>
+                    <svg
+                      className="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main Appeal Information */}
             <div className="lg:col-span-2 space-y-6">
@@ -255,14 +286,14 @@ export default function AppealManagement() {
                         appeal.status
                       )}`}
                     >
-                      {appeal.status}
+                      {appeal.status || "Unknown"}
                     </span>
                     <span
                       className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${getPriorityColor(
                         appeal.priority
                       )}`}
                     >
-                      {appeal.priority} Priority
+                      {appeal.priority || "No"} Priority
                     </span>
                   </div>
                 </div>
@@ -273,7 +304,7 @@ export default function AppealManagement() {
                       Student Name
                     </label>
                     <p className="mt-1 text-sm text-gray-900">
-                      {appeal.studentName}
+                      {appeal.student?.firstName} {appeal.student?.lastName}
                     </p>
                   </div>
                   <div>
@@ -281,7 +312,7 @@ export default function AppealManagement() {
                       Student ID
                     </label>
                     <p className="mt-1 text-sm text-gray-900">
-                      {appeal.studentId}
+                      {appeal.student?.studentId || appeal.studentId}
                     </p>
                   </div>
                   <div>
@@ -289,7 +320,7 @@ export default function AppealManagement() {
                       Email
                     </label>
                     <p className="mt-1 text-sm text-gray-900">
-                      {appeal.studentEmail}
+                      {appeal.student?.email || appeal.email}
                     </p>
                   </div>
                   <div>
@@ -297,15 +328,15 @@ export default function AppealManagement() {
                       Department
                     </label>
                     <p className="mt-1 text-sm text-gray-900">
-                      {appeal.department}
+                      {appeal.department || appeal.student?.department}
                     </p>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-700">
-                      Course
+                      Appeal Type
                     </label>
                     <p className="mt-1 text-sm text-gray-900">
-                      {appeal.course}
+                      {appeal.appealType || "Not specified"}
                     </p>
                   </div>
                   <div>
@@ -313,7 +344,7 @@ export default function AppealManagement() {
                       Submission Date
                     </label>
                     <p className="mt-1 text-sm text-gray-900">
-                      {new Date(appeal.submissionDate).toLocaleDateString()}
+                      {formatDate(appeal.createdAt)}
                     </p>
                   </div>
                 </div>
@@ -322,15 +353,19 @@ export default function AppealManagement() {
                   <label className="block text-sm font-medium text-gray-700">
                     Grounds for Appeal
                   </label>
-                  <p className="mt-1 text-sm text-gray-900">{appeal.grounds}</p>
+                  <p className="mt-1 text-sm text-gray-900">
+                    {Array.isArray(appeal.grounds)
+                      ? appeal.grounds.join(", ")
+                      : appeal.grounds || "Not specified"}
+                  </p>
                 </div>
 
                 <div className="mt-4">
                   <label className="block text-sm font-medium text-gray-700">
-                    Description
+                    Statement
                   </label>
-                  <p className="mt-1 text-sm text-gray-900">
-                    {appeal.description}
+                  <p className="mt-1 text-sm text-gray-900 break-words overflow-hidden">
+                    {appeal.statement || "No statement provided."}
                   </p>
                 </div>
               </div>
@@ -345,17 +380,23 @@ export default function AppealManagement() {
                     className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
                     value={newStatus}
                     onChange={(e) => setNewStatus(e.target.value)}
+                    disabled={submitting}
                   >
-                    <option value="Pending">Pending</option>
-                    <option value="In Review">In Review</option>
-                    <option value="Awaiting Info">Awaiting Info</option>
-                    <option value="Resolved">Resolved</option>
+                    <option value="submitted">Submitted</option>
+                    <option value="under review">Under Review</option>
+                    <option value="awaiting information">
+                      Awaiting Information
+                    </option>
+                    <option value="decision made">Decision Made</option>
+                    <option value="resolved">Resolved</option>
+                    <option value="rejected">Rejected</option>
                   </select>
                   <button
                     onClick={handleStatusChange}
-                    className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700"
+                    disabled={submitting}
+                    className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Update Status
+                    {submitting ? "Updating..." : "Update Status"}
                   </button>
                 </div>
               </div>
@@ -366,17 +407,25 @@ export default function AppealManagement() {
                   Comments Visible to Student
                 </h3>
                 <div className="space-y-4">
-                  {appeal.comments.map((comment, index) => (
-                    <div
-                      key={index}
-                      className="border-l-4 border-indigo-500 pl-4 py-2"
-                    >
-                      <p className="text-sm text-gray-900">{comment.comment}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {comment.admin} • {comment.timestamp}
-                      </p>
-                    </div>
-                  ))}
+                  {Array.isArray(appeal.comments) &&
+                  appeal.comments.length > 0 ? (
+                    appeal.comments.map((comment, index) => (
+                      <div
+                        key={index}
+                        className="border-l-4 border-indigo-500 pl-4 py-2"
+                      >
+                        <p className="text-sm text-gray-900">
+                          {comment.content}
+                        </p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {comment.author?.firstName} {comment.author?.lastName}{" "}
+                          • {formatDate(comment.createdAt)}
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-500 text-sm">No comments yet.</p>
+                  )}
                 </div>
 
                 <div className="mt-4">
@@ -386,12 +435,14 @@ export default function AppealManagement() {
                     rows="3"
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
+                    disabled={submitting}
                   />
                   <button
                     onClick={handleAddComment}
-                    className="mt-2 bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700"
+                    disabled={submitting}
+                    className="mt-2 bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Add Comment
+                    {submitting ? "Adding..." : "Add Comment"}
                   </button>
                 </div>
               </div>
@@ -424,7 +475,7 @@ export default function AppealManagement() {
                             {file.fileSize
                               ? `${(file.fileSize / 1024 / 1024).toFixed(2)} MB`
                               : "Unknown size"}{" "}
-                            • {new Date(file.uploadedAt).toLocaleDateString()}
+                            • {formatDate(file.uploadedAt)}
                           </p>
                         </div>
                         <button className="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
@@ -449,14 +500,22 @@ export default function AppealManagement() {
                   Internal Notes
                 </h3>
                 <div className="space-y-3 mb-4">
-                  {appeal.internalNotes.map((note, index) => (
-                    <div key={index} className="p-3 bg-yellow-50 rounded-md">
-                      <p className="text-sm text-gray-900">{note.note}</p>
-                      <p className="text-xs text-gray-500 mt-1">
-                        {note.admin} • {note.timestamp}
-                      </p>
-                    </div>
-                  ))}
+                  {Array.isArray(appeal.internalNotes) &&
+                  appeal.internalNotes.length > 0 ? (
+                    appeal.internalNotes.map((note, index) => (
+                      <div key={index} className="p-3 bg-yellow-50 rounded-md">
+                        <p className="text-sm text-gray-900">{note.content}</p>
+                        <p className="text-xs text-gray-500 mt-1">
+                          {note.author?.firstName} {note.author?.lastName} •{" "}
+                          {formatDate(note.createdAt)}
+                        </p>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-500 text-sm">
+                      No internal notes yet.
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -466,12 +525,14 @@ export default function AppealManagement() {
                     rows="3"
                     value={newNote}
                     onChange={(e) => setNewNote(e.target.value)}
+                    disabled={submitting}
                   />
                   <button
                     onClick={handleAddNote}
-                    className="mt-2 bg-yellow-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-yellow-700"
+                    disabled={submitting}
+                    className="mt-2 bg-yellow-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-yellow-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    Add Note
+                    {submitting ? "Adding..." : "Add Note"}
                   </button>
                 </div>
               </div>
@@ -496,37 +557,46 @@ export default function AppealManagement() {
                       type="file"
                       onChange={handleFileUpload}
                       className="w-full mb-2"
+                      disabled={submitting}
                     />
                     {uploadedFile && (
                       <button
                         onClick={handleUploadDocument}
-                        className="bg-indigo-600 text-white px-3 py-1 rounded text-sm hover:bg-indigo-700"
+                        disabled={submitting}
+                        className="bg-indigo-600 text-white px-3 py-1 rounded text-sm hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        Upload
+                        {submitting ? "Uploading..." : "Upload"}
                       </button>
                     )}
                   </div>
                 )}
 
                 <div className="space-y-2">
-                  {appeal.staffDocuments.map((doc, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-2 bg-gray-50 rounded-md"
-                    >
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {doc.name}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {doc.admin} • {doc.uploadedAt}
-                        </p>
+                  {Array.isArray(appeal.staffDocuments) &&
+                  appeal.staffDocuments.length > 0 ? (
+                    appeal.staffDocuments.map((doc, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-2 bg-gray-50 rounded-md"
+                      >
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">
+                            {doc.name}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {doc.admin} • {formatDate(doc.uploadedAt)}
+                          </p>
+                        </div>
+                        <button className="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
+                          View
+                        </button>
                       </div>
-                      <button className="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
-                        View
-                      </button>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="text-gray-500 text-sm">
+                      No staff documents uploaded.
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -536,13 +606,25 @@ export default function AppealManagement() {
                   Quick Actions
                 </h3>
                 <div className="space-y-2">
-                  <button className="w-full bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700">
+                  <button
+                    onClick={() => setNewStatus("resolved")}
+                    disabled={submitting}
+                    className="w-full bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
                     Approve Appeal
                   </button>
-                  <button className="w-full bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700">
+                  <button
+                    onClick={() => setNewStatus("rejected")}
+                    disabled={submitting}
+                    className="w-full bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
                     Reject Appeal
                   </button>
-                  <button className="w-full bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700">
+                  <button
+                    onClick={() => setNewStatus("awaiting information")}
+                    disabled={submitting}
+                    className="w-full bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
                     Request More Info
                   </button>
                 </div>
