@@ -150,6 +150,39 @@ class ApiService {
       body: JSON.stringify(appealData),
     });
   }
+
+  // Reviewer methods
+  async getReviewerAppeals(filters = {}) {
+    const queryParams = new URLSearchParams();
+    if (filters.status) queryParams.append("status", filters.status);
+    if (filters.appealType)
+      queryParams.append("appealType", filters.appealType);
+    if (filters.page) queryParams.append("page", filters.page);
+    if (filters.limit) queryParams.append("limit", filters.limit);
+
+    const endpoint = `/reviewer/appeals${
+      queryParams.toString() ? `?${queryParams.toString()}` : ""
+    }`;
+    return this.request(endpoint);
+  }
+
+  async getReviewerAppeal(appealId) {
+    return this.request(`/reviewer/appeals/${appealId}`);
+  }
+
+  async updateAppealStatus(appealId, statusData) {
+    return this.request(`/reviewer/appeals/${appealId}/status`, {
+      method: "PUT",
+      body: JSON.stringify(statusData),
+    });
+  }
+
+  async addAppealNote(appealId, noteData) {
+    return this.request(`/reviewer/appeals/${appealId}/notes`, {
+      method: "POST",
+      body: JSON.stringify(noteData),
+    });
+  }
 }
 
 // Create and export a single instance

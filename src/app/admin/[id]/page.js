@@ -401,25 +401,42 @@ export default function AppealManagement() {
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
                   Uploaded Evidence
                 </h3>
+                {console.log(
+                  "Admin rendering evidence section:",
+                  appeal.evidence
+                )}
                 <div className="space-y-2">
-                  {appeal.evidence.map((file, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between p-3 bg-gray-50 rounded-md"
-                    >
-                      <div>
-                        <p className="text-sm font-medium text-gray-900">
-                          {file.name}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {file.type} • {file.uploadedAt}
-                        </p>
+                  {Array.isArray(appeal.evidence) &&
+                  appeal.evidence.length > 0 ? (
+                    appeal.evidence.map((file, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-md"
+                      >
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">
+                            {file.originalName ||
+                              file.filename ||
+                              file.name ||
+                              "Unknown file"}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {file.fileSize
+                              ? `${(file.fileSize / 1024 / 1024).toFixed(2)} MB`
+                              : "Unknown size"}{" "}
+                            • {new Date(file.uploadedAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                        <button className="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
+                          View
+                        </button>
                       </div>
-                      <button className="text-indigo-600 hover:text-indigo-900 text-sm font-medium">
-                        View
-                      </button>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="text-gray-500 text-sm">
+                      No evidence files uploaded.
+                    </p>
+                  )}
                 </div>
               </div>
             </div>

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ProtectedRoute from "../../components/ProtectedRoute";
+import apiService from "../../services/api";
 
 export default function ReviewerDashboard() {
   const [userInfo, setUserInfo] = useState(null);
@@ -15,6 +16,7 @@ export default function ReviewerDashboard() {
     date: "",
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -31,86 +33,50 @@ export default function ReviewerDashboard() {
     }
 
     setUserInfo(parsedUser);
-
-    // Mock data - replace with actual API calls
-    const mockAppeals = [
-      {
-        id: "APL-2024-001",
-        studentName: "John Doe",
-        studentId: "STU001",
-        department: "Computer Science",
-        course: "CS101 - Introduction to Programming",
-        status: "Under Review",
-        grounds: "Late Submission",
-        submissionDate: "2024-01-15",
-        priority: "High",
-        deadline: "2024-01-20",
-        reviewDeadline: "2024-01-25",
-        assignedReviewer: "Dr. Sarah Johnson",
-      },
-      {
-        id: "APL-2024-002",
-        studentName: "Jane Smith",
-        studentId: "STU002",
-        department: "Mathematics",
-        course: "MATH201 - Advanced Calculus",
-        status: "Pending",
-        grounds: "Medical Circumstances",
-        submissionDate: "2024-01-14",
-        priority: "Medium",
-        deadline: "2024-01-19",
-        reviewDeadline: "2024-01-24",
-        assignedReviewer: "Dr. Sarah Johnson",
-      },
-      {
-        id: "APL-2024-003",
-        studentName: "Mike Johnson",
-        studentId: "STU003",
-        department: "Physics",
-        course: "PHYS101 - Mechanics",
-        status: "Awaiting Info",
-        grounds: "Technical Issues",
-        submissionDate: "2024-01-13",
-        priority: "Low",
-        deadline: "2024-01-18",
-        reviewDeadline: "2024-01-23",
-        assignedReviewer: "Dr. Sarah Johnson",
-      },
-      {
-        id: "APL-2024-004",
-        studentName: "Emily Brown",
-        studentId: "STU004",
-        department: "Computer Science",
-        course: "CS201 - Data Structures",
-        status: "Review Complete",
-        grounds: "Academic Judgment",
-        submissionDate: "2024-01-12",
-        priority: "Medium",
-        deadline: "2024-01-17",
-        reviewDeadline: "2024-01-22",
-        assignedReviewer: "Dr. Sarah Johnson",
-        outcome: "Appeal Upheld",
-      },
-      {
-        id: "APL-2024-005",
-        studentName: "David Wilson",
-        studentId: "STU005",
-        department: "Engineering",
-        course: "ENG101 - Engineering Principles",
-        status: "Under Review",
-        grounds: "Procedural Irregularity",
-        submissionDate: "2024-01-11",
-        priority: "High",
-        deadline: "2024-01-16",
-        reviewDeadline: "2024-01-21",
-        assignedReviewer: "Dr. Sarah Johnson",
-      },
-    ];
-
-    setAppeals(mockAppeals);
-    setFilteredAppeals(mockAppeals);
-    setLoading(false);
+    fetchAppeals();
   }, [router]);
+
+  const fetchAppeals = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await apiService.getReviewerAppeals();
+      const formattedAppeals = response.appeals.map((appeal) => ({
+        id: appeal._id,
+        studentName: appeal.student
+          ? `${appeal.student.firstName} ${appeal.student.lastName}`
+          : "Unknown Student",
+        studentId: appeal.student?.studentId || "N/A",
+        department: appeal.department || appeal.student?.department || "N/A",
+        course: appeal.course || "N/A",
+        status: appeal.status || "Pending",
+        grounds: appeal.appealType || "N/A",
+        submissionDate: appeal.createdAt,
+        priority: appeal.priority || "Medium",
+        deadline: appeal.deadline,
+        reviewDeadline: appeal.reviewDeadline,
+        assignedReviewer: appeal.assignedReviewer
+          ? `${appeal.assignedReviewer.firstName} ${appeal.assignedReviewer.lastName}`
+          : "Unassigned",
+        appealType: appeal.appealType,
+        description: appeal.statement,
+        evidence: appeal.evidence || [],
+        timeline: appeal.timeline || [],
+        notes: appeal.notes || [],
+      }));
+
+      setAppeals(formattedAppeals);
+      setFilteredAppeals(formattedAppeals);
+    } catch (error) {
+      console.error("Failed to fetch appeals:", error);
+      setError("Failed to load appeals. Please try again.");
+      // Fallback to empty array if API fails
+      setAppeals([]);
+      setFilteredAppeals([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleFilterChange = (key, value) => {
     const newFilters = { ...filters, [key]: value };
@@ -144,6 +110,47 @@ export default function ReviewerDashboard() {
     setFilteredAppeals(filtered);
   };
 
+  const handleApplyFilters = async () => {
+    try {
+      setLoading(true);
+      const apiFilters = {};
+      if (filters.status) apiFilters.status = filters.status;
+      if (filters.appealType) apiFilters.appealType = filters.appealType;
+
+      const response = await apiService.getReviewerAppeals(apiFilters);
+      const formattedAppeals = response.appeals.map((appeal) => ({
+        id: appeal._id,
+        studentName: appeal.student
+          ? `${appeal.student.firstName} ${appeal.student.lastName}`
+          : "Unknown Student",
+        studentId: appeal.student?.studentId || "N/A",
+        department: appeal.department || appeal.student?.department || "N/A",
+        course: appeal.course || "N/A",
+        status: appeal.status || "Pending",
+        grounds: appeal.appealType || "N/A",
+        submissionDate: appeal.createdAt,
+        priority: appeal.priority || "Medium",
+        deadline: appeal.deadline,
+        reviewDeadline: appeal.reviewDeadline,
+        assignedReviewer: appeal.assignedReviewer
+          ? `${appeal.assignedReviewer.firstName} ${appeal.assignedReviewer.lastName}`
+          : "Unassigned",
+        appealType: appeal.appealType,
+        description: appeal.statement,
+        evidence: appeal.evidence || [],
+        timeline: appeal.timeline || [],
+        notes: appeal.notes || [],
+      }));
+
+      setAppeals(formattedAppeals);
+      setFilteredAppeals(formattedAppeals);
+    } catch (error) {
+      console.error("Failed to apply filters:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const clearFilters = () => {
     setFilters({
       status: "",
@@ -151,7 +158,7 @@ export default function ReviewerDashboard() {
       department: "",
       date: "",
     });
-    setFilteredAppeals(appeals);
+    fetchAppeals(); // Refresh data with no filters
   };
 
   const getStatusColor = (status) => {
@@ -257,6 +264,41 @@ export default function ReviewerDashboard() {
               </div>
             </div>
 
+            {/* Error Display */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg
+                      className="h-5 w-5 text-red-400"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-red-800">Error</h3>
+                    <div className="mt-2 text-sm text-red-700">
+                      <p>{error}</p>
+                    </div>
+                    <div className="mt-4">
+                      <button
+                        onClick={fetchAppeals}
+                        className="bg-red-100 text-red-800 px-3 py-2 rounded-md text-sm font-medium hover:bg-red-200"
+                      >
+                        Try Again
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Filters */}
             <div className="bg-white shadow rounded-lg p-6 mb-6">
               <h3 className="text-lg font-medium text-gray-900 mb-4">
@@ -327,10 +369,18 @@ export default function ReviewerDashboard() {
                     className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900"
                   />
                 </div>
-                <div className="flex items-end">
+                <div className="flex items-end space-x-2">
+                  <button
+                    onClick={handleApplyFilters}
+                    disabled={loading}
+                    className="flex-1 bg-purple-600 text-white px-4 py-2 rounded-md text-sm hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? "Applying..." : "Apply Filters"}
+                  </button>
                   <button
                     onClick={clearFilters}
-                    className="w-full bg-gray-600 text-white px-4 py-2 rounded-md text-sm hover:bg-gray-700"
+                    disabled={loading}
+                    className="flex-1 bg-gray-600 text-white px-4 py-2 rounded-md text-sm hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     Clear Filters
                   </button>
@@ -340,18 +390,22 @@ export default function ReviewerDashboard() {
 
             {/* Appeals Table */}
             <div className="bg-white shadow rounded-lg">
-              <div className="px-6 py-4 border-b border-gray-200">
+              <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
                 <h3 className="text-lg font-medium text-gray-900">
                   Cases for Review ({filteredAppeals.length})
                 </h3>
+                <button
+                  onClick={fetchAppeals}
+                  disabled={loading}
+                  className="bg-blue-600 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? "Refreshing..." : "Refresh"}
+                </button>
               </div>
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Appeal ID
-                      </th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Student
                       </th>
@@ -373,10 +427,22 @@ export default function ReviewerDashboard() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredAppeals.length === 0 ? (
+                    {loading ? (
                       <tr>
                         <td
-                          colSpan="7"
+                          colSpan="6"
+                          className="px-6 py-4 text-center text-gray-500"
+                        >
+                          <div className="flex items-center justify-center">
+                            <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600 mr-2"></div>
+                            Loading appeals...
+                          </div>
+                        </td>
+                      </tr>
+                    ) : filteredAppeals.length === 0 ? (
+                      <tr>
+                        <td
+                          colSpan="6"
                           className="px-6 py-4 text-center text-gray-500"
                         >
                           No appeals found matching the current filters.
@@ -385,11 +451,6 @@ export default function ReviewerDashboard() {
                     ) : (
                       filteredAppeals.map((appeal) => (
                         <tr key={appeal.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">
-                              {appeal.id}
-                            </div>
-                          </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <div>
                               <div className="text-sm font-medium text-gray-900">

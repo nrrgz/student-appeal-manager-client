@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import ProtectedRoute from "../../../components/ProtectedRoute";
+import apiService from "../../../services/api";
 
 export default function AppealReview() {
   const [userInfo, setUserInfo] = useState(null);
@@ -15,6 +16,8 @@ export default function AppealReview() {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [recommendation, setRecommendation] = useState("");
   const [decision, setDecision] = useState("");
+  const [error, setError] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
 
   const router = useRouter();
   const params = useParams();
@@ -34,124 +37,124 @@ export default function AppealReview() {
     }
 
     setUserInfo(parsedUser);
-
-    // Mock data - replace with actual API calls
-    const mockAppeal = {
-      id: appealId,
-      studentName: "John Doe",
-      studentId: "STU001",
-      studentEmail: "john.doe@university.edu",
-      department: "Computer Science",
-      course: "CS101 - Introduction to Programming",
-      status: "Under Review",
-      grounds: "Late Submission",
-      submissionDate: "2024-01-15",
-      priority: "High",
-      description:
-        "I was unable to submit my assignment on time due to a family emergency that required my immediate attention. I have attached supporting documentation.",
-      evidence: [
-        {
-          name: "medical_certificate.pdf",
-          type: "Medical Certificate",
-          uploadedAt: "2024-01-15",
-        },
-        {
-          name: "family_emergency_letter.pdf",
-          type: "Family Emergency Letter",
-          uploadedAt: "2024-01-15",
-        },
-      ],
-      internalNotes: [
-        {
-          note: "Student provided medical documentation. Need to verify authenticity.",
-          admin: "Admin User",
-          timestamp: "2024-01-16 10:30",
-        },
-        {
-          note: "Contacted medical office for verification. Awaiting response.",
-          admin: "Admin User",
-          timestamp: "2024-01-16 14:15",
-        },
-      ],
-      comments: [
-        {
-          comment:
-            "Thank you for your submission. We are reviewing your case and will get back to you within 3-5 business days.",
-          admin: "Admin User",
-          timestamp: "2024-01-16 10:30",
-          visibleToStudent: true,
-        },
-        {
-          comment:
-            "We have received your supporting documents and are currently reviewing them.",
-          admin: "Admin User",
-          timestamp: "2024-01-16 14:15",
-          visibleToStudent: true,
-        },
-      ],
-      staffDocuments: [
-        {
-          name: "verification_request.pdf",
-          type: "Verification Request",
-          uploadedAt: "2024-01-16 14:15",
-          admin: "Admin User",
-        },
-      ],
-      academicHistory: {
-        previousGrades: ["A", "B+", "A-", "B"],
-        attendance: "85%",
-        previousAppeals: 0,
-      },
-      deadline: "2024-01-20",
-      assignedReviewer: "Dr. Sarah Johnson",
-      reviewDeadline: "2024-01-25",
-    };
-
-    setAppeal(mockAppeal);
-    setNewStatus(mockAppeal.status);
-    setLoading(false);
+    fetchAppeal();
   }, [router, appealId]);
 
-  const handleAddNote = () => {
+  const fetchAppeal = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await apiService.getReviewerAppeal(appealId);
+      const appealData = response.appeal;
+
+      // Format the appeal data for the UI
+      const formattedAppeal = {
+        id: appealData._id,
+        studentName: appealData.student
+          ? `${appealData.student.firstName} ${appealData.student.lastName}`
+          : "Unknown Student",
+        studentId: appealData.student?.studentId || "N/A",
+        studentEmail: appealData.student?.email || "N/A",
+        department: appealData.student?.department || "N/A",
+        course: appealData.course || "N/A",
+        status: appealData.status || "Pending",
+        grounds: appealData.appealType || "N/A",
+        submissionDate: appealData.createdAt,
+        priority: appealData.priority || "Medium",
+        description: appealData.statement || "No description provided",
+        evidence: appealData.evidence || [],
+        internalNotes:
+          appealData.notes?.filter((note) => note.isInternal) || [],
+        comments: appealData.notes?.filter((note) => !note.isInternal) || [],
+        staffDocuments: appealData.staffDocuments || [],
+        academicHistory: {
+          previousGrades: appealData.student?.previousGrades || [],
+          attendance: appealData.student?.attendance || "N/A",
+          previousAppeals: appealData.student?.previousAppeals || 0,
+        },
+        deadline: appealData.deadline,
+        assignedReviewer: appealData.assignedReviewer
+          ? `${appealData.assignedReviewer.firstName} ${appealData.assignedReviewer.lastName}`
+          : "Unassigned",
+        reviewDeadline: appealData.reviewDeadline,
+        timeline: appealData.timeline || [],
+        appealType: appealData.appealType,
+        recommendation: appealData.recommendation || "",
+        decision: appealData.decision || "",
+      };
+
+      setAppeal(formattedAppeal);
+      setNewStatus(formattedAppeal.status);
+      setRecommendation(formattedAppeal.recommendation);
+      setDecision(formattedAppeal.decision);
+    } catch (error) {
+      console.error("Failed to fetch appeal:", error);
+      setError("Failed to load appeal details. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleAddNote = async () => {
     if (!newNote.trim()) return;
 
-    const note = {
-      note: newNote,
-      reviewer: userInfo.name,
-      timestamp: new Date().toLocaleString(),
-    };
+    try {
+      setSubmitting(true);
+      await apiService.addAppealNote(appealId, {
+        content: newNote,
+        isInternal: true,
+      });
 
-    setAppeal((prev) => ({
-      ...prev,
-      internalNotes: [...prev.internalNotes, note],
-    }));
-    setNewNote("");
+      // Refresh the appeal data to get the updated notes
+      await fetchAppeal();
+      setNewNote("");
+    } catch (error) {
+      console.error("Failed to add note:", error);
+      setError("Failed to add note. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleAddComment = () => {
+  const handleAddComment = async () => {
     if (!newComment.trim()) return;
 
-    const comment = {
-      comment: newComment,
-      reviewer: userInfo.name,
-      timestamp: new Date().toLocaleString(),
-      visibleToStudent: true,
-    };
+    try {
+      setSubmitting(true);
+      await apiService.addAppealNote(appealId, {
+        content: newComment,
+        isInternal: false,
+      });
 
-    setAppeal((prev) => ({
-      ...prev,
-      comments: [...prev.comments, comment],
-    }));
-    setNewComment("");
+      // Refresh the appeal data to get the updated comments
+      await fetchAppeal();
+      setNewComment("");
+    } catch (error) {
+      console.error("Failed to add comment:", error);
+      setError("Failed to add comment. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleStatusChange = () => {
+  const handleStatusChange = async () => {
     if (!newStatus.trim()) return;
 
-    setAppeal((prev) => ({
-      ...prev,
-      status: newStatus,
-    }));
+    try {
+      setSubmitting(true);
+      await apiService.updateAppealStatus(appealId, {
+        status: newStatus,
+        notes: `Status updated to: ${newStatus}`,
+      });
+
+      // Refresh the appeal data to get the updated status
+      await fetchAppeal();
+    } catch (error) {
+      console.error("Failed to update status:", error);
+      setError("Failed to update status. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleFileUpload = (event) => {
@@ -161,19 +164,35 @@ export default function AppealReview() {
     }
   };
 
-  const handleSubmitReview = () => {
+  const handleSubmitReview = async () => {
     if (!recommendation.trim() || !decision.trim()) return;
 
-    // Here you would typically submit the review to your backend
-    console.log("Review submitted:", { recommendation, decision });
+    try {
+      setSubmitting(true);
 
-    // Update appeal status
-    setAppeal((prev) => ({
-      ...prev,
-      status: "Review Complete",
-      recommendation,
-      decision,
-    }));
+      // Update status to review complete
+      await apiService.updateAppealStatus(appealId, {
+        status: "decision made",
+        notes: `Review completed. Recommendation: ${recommendation}. Decision: ${decision}.`,
+      });
+
+      // Add a note with the recommendation and decision
+      await apiService.addAppealNote(appealId, {
+        content: `Review Recommendation: ${recommendation}\nDecision: ${decision}`,
+        isInternal: true,
+      });
+
+      // Refresh the appeal data
+      await fetchAppeal();
+
+      // Show success message or redirect
+      alert("Review submitted successfully!");
+    } catch (error) {
+      console.error("Failed to submit review:", error);
+      setError("Failed to submit review. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const getStatusColor = (status) => {
@@ -204,6 +223,17 @@ export default function AppealReview() {
     }
   };
 
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   if (!userInfo) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -226,6 +256,16 @@ export default function AppealReview() {
     );
   }
 
+  if (!appeal) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <p className="text-gray-600">No appeal data available.</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <ProtectedRoute requiredRole="reviewer">
       <div className="min-h-screen bg-gray-50">
@@ -235,18 +275,12 @@ export default function AppealReview() {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">
-                  Appeal Review - {appeal.id}
+                  Appeal Review
                 </h1>
                 <p className="text-gray-600 mt-1">
                   Reviewing appeal for {appeal.studentName}
                 </p>
               </div>
-              <button
-                onClick={() => router.push("/reviewer")}
-                className="bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
-              >
-                Back to Dashboard
-              </button>
             </div>
 
             {/* Status and Priority */}
@@ -286,6 +320,41 @@ export default function AppealReview() {
                 </p>
               </div>
             </div>
+
+            {/* Error Display */}
+            {error && (
+              <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg
+                      className="h-5 w-5 text-red-400"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-red-800">Error</h3>
+                    <div className="mt-2 text-sm text-red-700">
+                      <p>{error}</p>
+                    </div>
+                    <div className="mt-4">
+                      <button
+                        onClick={fetchAppeal}
+                        className="bg-red-100 text-red-800 px-3 py-2 rounded-md text-sm font-medium hover:bg-red-200"
+                      >
+                        Try Again
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Main Content */}
@@ -351,7 +420,7 @@ export default function AppealReview() {
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Description</p>
-                      <p className="text-sm text-gray-900 whitespace-pre-wrap">
+                      <p className="text-sm text-gray-900 whitespace-pre-wrap break-words overflow-hidden">
                         {appeal.description}
                       </p>
                     </div>
@@ -363,25 +432,44 @@ export default function AppealReview() {
                   <h3 className="text-lg font-medium text-gray-900 mb-4">
                     Supporting Evidence
                   </h3>
+                  {console.log(
+                    "Reviewer rendering evidence section:",
+                    appeal.evidence
+                  )}
                   <div className="space-y-3">
-                    {appeal.evidence.map((doc, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
-                      >
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">
-                            {doc.name}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            {doc.type} • Uploaded {doc.uploadedAt}
-                          </p>
+                    {Array.isArray(appeal.evidence) &&
+                    appeal.evidence.length > 0 ? (
+                      appeal.evidence.map((doc, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between p-3 border border-gray-200 rounded-lg"
+                        >
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">
+                              {doc.originalName ||
+                                doc.filename ||
+                                doc.name ||
+                                "Unknown Document"}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {doc.fileSize
+                                ? `${(doc.fileSize / 1024 / 1024).toFixed(
+                                    2
+                                  )} MB`
+                                : "Unknown size"}{" "}
+                              • Uploaded {formatDate(doc.uploadedAt)}
+                            </p>
+                          </div>
+                          <button className="text-purple-600 hover:text-purple-800 text-sm font-medium">
+                            View
+                          </button>
                         </div>
-                        <button className="text-purple-600 hover:text-purple-800 text-sm font-medium">
-                          View
-                        </button>
-                      </div>
-                    ))}
+                      ))
+                    ) : (
+                      <p className="text-gray-500 text-sm">
+                        No supporting evidence uploaded.
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -394,19 +482,28 @@ export default function AppealReview() {
                     <div>
                       <p className="text-sm text-gray-500">Previous Grades</p>
                       <p className="text-sm font-medium text-gray-900">
-                        {appeal.academicHistory.previousGrades.join(", ")}
+                        {Array.isArray(appeal.academicHistory.previousGrades)
+                          ? appeal.academicHistory.previousGrades.join(", ")
+                          : "No grades available"}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Attendance</p>
                       <p className="text-sm font-medium text-gray-900">
-                        {appeal.academicHistory.attendance}
+                        {typeof appeal.academicHistory.attendance ===
+                          "string" ||
+                        typeof appeal.academicHistory.attendance === "number"
+                          ? appeal.academicHistory.attendance
+                          : "N/A"}
                       </p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Previous Appeals</p>
                       <p className="text-sm font-medium text-gray-900">
-                        {appeal.academicHistory.previousAppeals}
+                        {typeof appeal.academicHistory.previousAppeals ===
+                        "number"
+                          ? appeal.academicHistory.previousAppeals
+                          : "N/A"}
                       </p>
                     </div>
                   </div>
@@ -439,9 +536,10 @@ export default function AppealReview() {
                       </select>
                       <button
                         onClick={handleStatusChange}
-                        className="mt-2 w-full bg-blue-600 text-white px-3 py-2 rounded-md text-sm hover:bg-blue-700"
+                        disabled={submitting}
+                        className="mt-2 w-full bg-blue-600 text-white px-3 py-2 rounded-md text-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
-                        Update Status
+                        {submitting ? "Updating..." : "Update Status"}
                       </button>
                     </div>
 
@@ -478,10 +576,12 @@ export default function AppealReview() {
 
                     <button
                       onClick={handleSubmitReview}
-                      disabled={!recommendation.trim() || !decision.trim()}
+                      disabled={
+                        !recommendation.trim() || !decision.trim() || submitting
+                      }
                       className="w-full bg-purple-600 text-white px-3 py-2 rounded-md text-sm hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
-                      Submit Review
+                      {submitting ? "Submitting..." : "Submit Review"}
                     </button>
                   </div>
                 </div>
@@ -492,14 +592,36 @@ export default function AppealReview() {
                     Internal Notes
                   </h3>
                   <div className="space-y-3 mb-4">
-                    {appeal.internalNotes.map((note, index) => (
-                      <div key={index} className="text-sm">
-                        <p className="text-gray-900">{note.note}</p>
-                        <p className="text-gray-500 text-xs mt-1">
-                          {note.admin} • {note.timestamp}
-                        </p>
-                      </div>
-                    ))}
+                    {appeal.internalNotes &&
+                    Array.isArray(appeal.internalNotes) &&
+                    appeal.internalNotes.length > 0 ? (
+                      appeal.internalNotes.map((note, index) => (
+                        <div key={index} className="text-sm">
+                          <p className="text-gray-900">
+                            {typeof note.content === "string"
+                              ? note.content
+                              : typeof note.note === "string"
+                              ? note.note
+                              : "No content"}
+                          </p>
+                          <p className="text-gray-500 text-xs mt-1">
+                            {typeof note.author === "string"
+                              ? note.author
+                              : typeof note.admin === "string"
+                              ? note.admin
+                              : "Unknown"}{" "}
+                            •{" "}
+                            {typeof note.timestamp === "string"
+                              ? note.timestamp
+                              : "Unknown time"}
+                          </p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-gray-500 text-sm">
+                        No internal notes yet.
+                      </p>
+                    )}
                   </div>
                   <div>
                     <textarea
@@ -510,10 +632,10 @@ export default function AppealReview() {
                     />
                     <button
                       onClick={handleAddNote}
-                      disabled={!newNote.trim()}
+                      disabled={!newNote.trim() || submitting}
                       className="mt-2 w-full bg-gray-600 text-white px-3 py-2 rounded-md text-sm hover:bg-gray-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
-                      Add Note
+                      {submitting ? "Adding..." : "Add Note"}
                     </button>
                   </div>
                 </div>
@@ -524,14 +646,34 @@ export default function AppealReview() {
                     Student Comments
                   </h3>
                   <div className="space-y-3 mb-4">
-                    {appeal.comments.map((comment, index) => (
-                      <div key={index} className="text-sm">
-                        <p className="text-gray-900">{comment.comment}</p>
-                        <p className="text-gray-500 text-xs mt-1">
-                          {comment.admin} • {comment.timestamp}
-                        </p>
-                      </div>
-                    ))}
+                    {appeal.comments &&
+                    Array.isArray(appeal.comments) &&
+                    appeal.comments.length > 0 ? (
+                      appeal.comments.map((comment, index) => (
+                        <div key={index} className="text-sm">
+                          <p className="text-gray-900">
+                            {typeof comment.content === "string"
+                              ? comment.content
+                              : typeof comment.comment === "string"
+                              ? comment.comment
+                              : "No content"}
+                          </p>
+                          <p className="text-gray-500 text-xs mt-1">
+                            {typeof comment.author === "string"
+                              ? comment.author
+                              : typeof comment.admin === "string"
+                              ? comment.admin
+                              : "Unknown"}{" "}
+                            •{" "}
+                            {typeof comment.timestamp === "string"
+                              ? comment.timestamp
+                              : "Unknown time"}
+                          </p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-gray-500 text-sm">No comments yet.</p>
+                    )}
                   </div>
                   <div>
                     <textarea
@@ -542,10 +684,10 @@ export default function AppealReview() {
                     />
                     <button
                       onClick={handleAddComment}
-                      disabled={!newComment.trim()}
+                      disabled={!newComment.trim() || submitting}
                       className="mt-2 w-full bg-green-600 text-white px-3 py-2 rounded-md text-sm hover:bg-green-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
                     >
-                      Add Comment
+                      {submitting ? "Adding..." : "Add Comment"}
                     </button>
                   </div>
                 </div>

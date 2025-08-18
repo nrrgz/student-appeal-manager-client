@@ -19,6 +19,7 @@ export default function NewAppeal() {
     studentId: "",
     email: "",
     phone: "",
+    department: "", // Added department field
 
     hasAdviser: false,
     adviserName: "",
@@ -31,12 +32,29 @@ export default function NewAppeal() {
 
     statement: "",
 
-    evidence: [],
+    evidence: [], // Initialize as empty array
 
     confirmAll: false,
 
     submitted: false,
   });
+
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
+
+  // Ensure evidence is always an array
+  useEffect(() => {
+    if (!Array.isArray(formData.evidence)) {
+      setFormData((prev) => ({ ...prev, evidence: [] }));
+    }
+  }, [formData.evidence]);
+
+  // Debug: Log state changes
+  useEffect(() => {
+    console.log("Uploaded files state changed:", uploadedFiles);
+    console.log("Form data evidence changed:", formData.evidence);
+  }, [uploadedFiles, formData.evidence]);
 
   const router = useRouter();
 
@@ -63,8 +81,20 @@ export default function NewAppeal() {
       lastName: user.lastName || "",
       studentId: user.studentId || "",
       email: user.email || "",
+      department: user.department || "", // Auto-populate department from user info
     }));
   }, [router]);
+
+  // Cleanup file preview URLs on unmount
+  useEffect(() => {
+    return () => {
+      uploadedFiles.forEach((file) => {
+        if (file.preview) {
+          URL.revokeObjectURL(file.preview);
+        }
+      });
+    };
+  }, [uploadedFiles]);
 
   const steps = [
     {
@@ -73,13 +103,18 @@ export default function NewAppeal() {
       description: "Check eligibility",
     },
     { id: 2, title: "Personal Information", description: "Your details" },
-    { id: 3, title: "Adviser Details", description: "Optional adviser info" },
-    { id: 4, title: "Appeal Type", description: "Select appeal category" },
-    { id: 5, title: "Grounds for Appeal", description: "Reason for appeal" },
-    { id: 6, title: "Appeal Statement", description: "Detailed explanation" },
-    { id: 7, title: "Evidence Upload", description: "Supporting documents" },
-    { id: 8, title: "Final Confirmation", description: "Review and confirm" },
-    { id: 9, title: "Submit", description: "Submit your appeal" },
+    {
+      id: 3,
+      title: "Department Selection",
+      description: "Select your department",
+    },
+    { id: 4, title: "Adviser Details", description: "Optional adviser info" },
+    { id: 5, title: "Appeal Type", description: "Select appeal category" },
+    { id: 6, title: "Grounds for Appeal", description: "Reason for appeal" },
+    { id: 7, title: "Appeal Statement", description: "Detailed explanation" },
+    { id: 8, title: "Evidence Upload", description: "Supporting documents" },
+    { id: 9, title: "Final Confirmation", description: "Review and confirm" },
+    { id: 10, title: "Submit", description: "Submit your appeal" },
   ];
 
   const handleInputChange = (field, value) => {
@@ -89,12 +124,142 @@ export default function NewAppeal() {
     }));
   };
 
+  const validateFile = (file) => {
+    const maxSize = 10 * 1024 * 1024; // 10MB
+    const allowedTypes = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+      "image/jpeg",
+      "image/png",
+    ];
+
+    if (file.size > maxSize) {
+      return { valid: false, error: "File size exceeds 10MB limit" };
+    }
+
+    if (!allowedTypes.includes(file.type)) {
+      return {
+        valid: false,
+        error:
+          "File type not supported. Please upload PDF, DOC, DOCX, JPG, or PNG files only.",
+      };
+    }
+
+    return { valid: true };
+  };
+
+  const handleFileSelect = (event) => {
+    const files = Array.from(event.target.files);
+    handleFiles(files);
+  };
+
+  const handleFiles = (files) => {
+    setUploadError(null);
+    const newFiles = [];
+    const errors = [];
+
+    files.forEach((file) => {
+      const validation = validateFile(file);
+      if (validation.valid) {
+        const fileId = Date.now() + Math.random();
+        newFiles.push({
+          id: fileId,
+          file: file,
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          preview: file.type.startsWith("image/")
+            ? URL.createObjectURL(file)
+            : null,
+        });
+      } else {
+        errors.push(`${file.name}: ${validation.error}`);
+      }
+    });
+
+    if (errors.length > 0) {
+      setUploadError(errors.join("\n"));
+    }
+
+    if (newFiles.length > 0) {
+      console.log("Adding new files:", newFiles);
+      setUploadedFiles((prev) => [...prev, ...newFiles]);
+      // Update form data with file information
+      const fileInfo = newFiles.map((f) => ({
+        name: f.name,
+        size: f.size,
+        type: f.type,
+      }));
+      console.log("File info for form data:", fileInfo);
+      setFormData((prev) => {
+        const newEvidence = [...prev.evidence, ...fileInfo];
+        console.log("Updated evidence in form data:", newEvidence);
+        return {
+          ...prev,
+          evidence: newEvidence,
+        };
+      });
+    }
+  };
+
+  const removeFile = (fileId) => {
+    console.log("Removing file with ID:", fileId);
+    setUploadedFiles((prev) => {
+      const fileToRemove = prev.find((f) => f.id === fileId);
+      if (fileToRemove) {
+        console.log("File to remove:", fileToRemove);
+        // Remove from form data
+        setFormData((prevForm) => {
+          const newEvidence = prevForm.evidence.filter(
+            (f) => f.name !== fileToRemove.name
+          );
+          console.log("Evidence after removal:", newEvidence);
+          return {
+            ...prevForm,
+            evidence: newEvidence,
+          };
+        });
+        // Clean up preview URL if it exists
+        if (fileToRemove.preview) {
+          URL.revokeObjectURL(fileToRemove.preview);
+        }
+      }
+      return prev.filter((f) => f.id !== fileId);
+    });
+  };
+
+  const formatFileSize = (bytes) => {
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    const files = Array.from(e.dataTransfer.files);
+    handleFiles(files);
+  };
+
   const nextStep = () => {
     if (currentStep === 1 && !formData.deadlineCheck) {
       router.push("/student/late-submission-info");
       return;
     }
-    if (currentStep < 9) {
+    if (currentStep < 10) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -115,6 +280,8 @@ export default function NewAppeal() {
     if (!formData.lastName.trim()) errors.push("Last name is required");
     if (!formData.studentId.trim()) errors.push("Student ID is required");
     if (!formData.email.trim()) errors.push("Email is required");
+    if (!formData.department.trim())
+      errors.push("Department selection is required");
     if (!formData.appealType) errors.push("Appeal type is required");
     if (!formData.grounds.length)
       errors.push("At least one ground must be selected");
@@ -162,6 +329,7 @@ export default function NewAppeal() {
         studentId: formData.studentId,
         email: formData.email,
         phone: formData.phone || "",
+        department: formData.department, // Added department field
         hasAdviser: formData.hasAdviser,
         adviserName: formData.hasAdviser ? formData.adviserName : "",
         adviserEmail: formData.hasAdviser ? formData.adviserEmail : "",
@@ -169,9 +337,14 @@ export default function NewAppeal() {
         appealType: formData.appealType,
         grounds: formData.grounds,
         statement: formData.statement,
-        // Evidence should be an array of file objects, but for now we'll send empty array
-        // since file upload isn't implemented yet
-        evidence: [],
+        // Include uploaded file information - match server schema
+        evidence: uploadedFiles.map((fileObj) => ({
+          filename: fileObj.name,
+          originalName: fileObj.name,
+          path: `/uploads/${fileObj.name}`, // This would be the actual file path on server
+          fileSize: fileObj.size,
+          uploadedAt: new Date().toISOString(),
+        })),
         // Add missing required fields
         moduleCode: "", // Optional field
         academicYear: new Date().getFullYear().toString(),
@@ -187,6 +360,9 @@ export default function NewAppeal() {
         "StudentId match:",
         formData.studentId === userInfo.studentId
       );
+      console.log("Evidence being sent:", appealData.evidence);
+      console.log("Uploaded files state:", uploadedFiles);
+      console.log("Uploaded files length:", uploadedFiles.length);
 
       // Submit appeal to API
       const response = await apiService.createAppeal(appealData);
@@ -343,6 +519,57 @@ export default function NewAppeal() {
           <div className="space-y-6">
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
               <h3 className="text-lg font-medium text-blue-800 mb-2">
+                Department Selection
+              </h3>
+              <p className="text-blue-700">
+                Please select your academic department. This information helps
+                reviewers understand your academic context.
+              </p>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Academic Department *
+              </label>
+              <select
+                value={formData.department}
+                onChange={(e) =>
+                  handleInputChange("department", e.target.value)
+                }
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900"
+                required
+              >
+                <option value="">Select your department</option>
+                <option value="Computer Science">Computer Science</option>
+                <option value="Mathematics">Mathematics</option>
+                <option value="Physics">Physics</option>
+                <option value="Engineering">Engineering</option>
+                <option value="Business">Business</option>
+                <option value="Arts">Arts</option>
+                <option value="Social Sciences">Social Sciences</option>
+                <option value="Medicine">Medicine</option>
+                <option value="Law">Law</option>
+                <option value="Other">Other</option>
+              </select>
+              {formData.department === "Other" && (
+                <input
+                  type="text"
+                  placeholder="Please specify your department"
+                  className="mt-2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900"
+                  onChange={(e) =>
+                    handleInputChange("department", e.target.value)
+                  }
+                />
+              )}
+            </div>
+          </div>
+        );
+
+      case 4:
+        return (
+          <div className="space-y-6">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h3 className="text-lg font-medium text-blue-800 mb-2">
                 Adviser Information (Optional)
               </h3>
               <p className="text-blue-700">
@@ -416,7 +643,7 @@ export default function NewAppeal() {
           </div>
         );
 
-      case 4:
+      case 5:
         return (
           <div className="space-y-6">
             <div>
@@ -450,7 +677,7 @@ export default function NewAppeal() {
           </div>
         );
 
-      case 5:
+      case 6:
         return (
           <div className="space-y-6">
             <div>
@@ -487,7 +714,7 @@ export default function NewAppeal() {
           </div>
         );
 
-      case 6:
+      case 7:
         return (
           <div className="space-y-6">
             <div>
@@ -510,7 +737,7 @@ export default function NewAppeal() {
           </div>
         );
 
-      case 7:
+      case 8:
         return (
           <div className="space-y-6">
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -523,7 +750,17 @@ export default function NewAppeal() {
               </p>
             </div>
 
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+            {/* File Upload Area */}
+            <div
+              className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                isDragOver
+                  ? "border-purple-400 bg-purple-50"
+                  : "border-gray-300 hover:border-gray-400"
+              }`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
               <svg
                 className="mx-auto h-12 w-12 text-gray-400"
                 stroke="currentColor"
@@ -538,21 +775,150 @@ export default function NewAppeal() {
                 />
               </svg>
               <div className="mt-4">
-                <button
-                  type="button"
-                  className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md font-medium transition-colors"
+                <input
+                  type="file"
+                  multiple
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                  id="file-upload"
+                />
+                <label
+                  htmlFor="file-upload"
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md font-medium transition-colors cursor-pointer"
                 >
                   Choose Files
-                </button>
+                </label>
                 <p className="mt-2 text-sm text-gray-500">
                   PDF, DOC, DOCX, JPG, PNG up to 10MB each
                 </p>
+                <p className="mt-1 text-sm text-gray-400">
+                  Or drag and drop files here
+                </p>
               </div>
+            </div>
+
+            {/* Error Display */}
+            {uploadError && (
+              <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg
+                      className="h-5 w-5 text-red-400"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-red-800">
+                      Upload Errors
+                    </h3>
+                    <div className="mt-2 text-sm text-red-700">
+                      <pre className="whitespace-pre-wrap">{uploadError}</pre>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Uploaded Files List */}
+            {uploadedFiles.length > 0 && (
+              <div className="space-y-3">
+                <h4 className="text-lg font-medium text-gray-900">
+                  Uploaded Files ({uploadedFiles.length})
+                </h4>
+                <div className="space-y-2">
+                  {uploadedFiles.map((file) => (
+                    <div
+                      key={file.id}
+                      className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg"
+                    >
+                      <div className="flex items-center space-x-3">
+                        {/* File Icon */}
+                        <div className="flex-shrink-0">
+                          {file.type.startsWith("image/") ? (
+                            <div className="w-10 h-10 rounded border overflow-hidden">
+                              <img
+                                src={file.preview}
+                                alt={file.name}
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                          ) : (
+                            <div className="w-10 h-10 bg-gray-100 rounded flex items-center justify-center">
+                              <svg
+                                className="w-6 h-6 text-gray-500"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* File Info */}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {file.name}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {formatFileSize(file.size)} • {file.type}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Remove Button */}
+                      <button
+                        type="button"
+                        onClick={() => removeFile(file.id)}
+                        className="flex-shrink-0 ml-2 p-1 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-full transition-colors"
+                        title="Remove file"
+                      >
+                        <svg
+                          className="w-5 h-5"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path
+                            fillRule="evenodd"
+                            d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                            clipRule="evenodd"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Help Text */}
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+              <h4 className="text-sm font-medium text-gray-900 mb-2">
+                What to upload:
+              </h4>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>• Medical certificates or doctor's notes</li>
+                <li>• Official letters or correspondence</li>
+                <li>• Screenshots of technical issues</li>
+                <li>• Any other relevant supporting documentation</li>
+              </ul>
             </div>
           </div>
         );
 
-      case 8:
+      case 9:
         return (
           <div className="space-y-6">
             <div className="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -575,6 +941,10 @@ export default function NewAppeal() {
                   )
                 </p>
                 <p className="text-sm text-gray-600">{formData.email}</p>
+                <p className="text-sm text-gray-600">
+                  <strong>Department:</strong>{" "}
+                  {formData.department || "Not selected"}
+                </p>
               </div>
 
               <div className="bg-white border border-gray-200 rounded-lg p-4">
@@ -587,6 +957,31 @@ export default function NewAppeal() {
                 <p className="text-sm text-gray-600">
                   <strong>Grounds:</strong> {formData.grounds.join(", ")}
                 </p>
+              </div>
+
+              <div className="bg-white border border-gray-200 rounded-lg p-4">
+                <h4 className="font-medium text-gray-900 mb-2">
+                  Supporting Evidence
+                </h4>
+                {uploadedFiles.length > 0 ? (
+                  <div className="space-y-2">
+                    {uploadedFiles.map((file) => (
+                      <div
+                        key={file.id}
+                        className="flex items-center space-x-2 text-sm text-gray-600"
+                      >
+                        <span>• {file.name}</span>
+                        <span className="text-gray-400">
+                          ({formatFileSize(file.size)})
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">
+                    No supporting evidence uploaded
+                  </p>
+                )}
               </div>
             </div>
 
@@ -607,7 +1002,7 @@ export default function NewAppeal() {
           </div>
         );
 
-      case 9:
+      case 10:
         return (
           <div className="space-y-6">
             {formData.submitted ? (
@@ -746,7 +1141,7 @@ export default function NewAppeal() {
 
             {renderStepContent()}
 
-            {currentStep !== 9 && (
+            {currentStep !== 10 && (
               <div className="flex justify-between mt-8 pt-6 border-t border-gray-200">
                 <button
                   onClick={prevStep}
@@ -764,7 +1159,7 @@ export default function NewAppeal() {
                   onClick={nextStep}
                   className="px-6 py-2 bg-purple-600 text-white rounded-md font-medium hover:bg-purple-700 transition-colors"
                 >
-                  {currentStep === 8 ? "Submit" : "Next"}
+                  {currentStep === 9 ? "Review & Submit" : "Next"}
                 </button>
               </div>
             )}

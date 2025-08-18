@@ -38,6 +38,8 @@ export default function AppealDetail() {
         setLoading(true);
         setError(null);
         const response = await apiService.getStudentAppeal(params.id);
+        console.log("Appeal data received:", response.appeal);
+        console.log("Evidence data:", response.appeal.evidence);
         setAppeal(response.appeal);
       } catch (error) {
         console.error("Failed to fetch appeal:", error);
@@ -78,6 +80,15 @@ export default function AppealDetail() {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const formatFileSize = (bytes) => {
+    if (!bytes) return "Unknown size";
+    if (bytes === 0) return "0 Bytes";
+    const k = 1024;
+    const sizes = ["Bytes", "KB", "MB", "GB"];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
   if (!userInfo || loading) {
@@ -202,7 +213,9 @@ export default function AppealDetail() {
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
                   Supporting Evidence
                 </h3>
-                {appeal.evidence && appeal.evidence.length > 0 ? (
+                {console.log("Rendering evidence section:", appeal.evidence)}
+                {Array.isArray(appeal.evidence) &&
+                appeal.evidence.length > 0 ? (
                   <div className="space-y-3">
                     {appeal.evidence.map((file, index) => (
                       <div
@@ -225,11 +238,18 @@ export default function AppealDetail() {
                           </svg>
                           <div>
                             <p className="text-sm font-medium text-gray-900">
-                              {file.name}
+                              {file.originalName ||
+                                file.filename ||
+                                file.name ||
+                                "Unknown file"}
                             </p>
                             <p className="text-sm text-gray-500">
-                              {file.size || "Unknown size"} • Uploaded{" "}
-                              {formatDate(file.uploadedAt || file.uploadDate)}
+                              {file.fileSize
+                                ? `${(file.fileSize / 1024 / 1024).toFixed(
+                                    2
+                                  )} MB`
+                                : "Unknown size"}{" "}
+                              • Uploaded {formatDate(file.uploadedAt)}
                             </p>
                           </div>
                         </div>
