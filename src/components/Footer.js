@@ -91,7 +91,7 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="https://www.sheffield.ac.uk/studentservices"
+                  href="https://sheffield.ac.uk/saas"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="hover:text-white transition-colors"

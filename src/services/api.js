@@ -257,6 +257,54 @@ class ApiService {
     return this.request(endpoint);
   }
 
+  async getComprehensiveReports(filters = {}) {
+    const queryParams = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) queryParams.append(key, value);
+    });
+
+    const endpoint = queryParams.toString()
+      ? `/admin/reports/comprehensive?${queryParams.toString()}`
+      : "/admin/reports/comprehensive";
+
+    return this.request(endpoint);
+  }
+
+  async exportReportsCSV(filters = {}) {
+    const queryParams = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) queryParams.append(key, value);
+    });
+
+    const endpoint = queryParams.toString()
+      ? `/admin/reports/export-csv?${queryParams.toString()}`
+      : "/admin/reports/export-csv";
+
+    // For CSV download, we need to handle the response differently
+    const url = `${this.baseURL}${endpoint}`;
+    const token = this.getToken();
+
+    const response = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const blob = await response.blob();
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = downloadUrl;
+    a.download = `appeal-reports-${new Date().toISOString().split("T")[0]}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(downloadUrl);
+  }
+
   async getUsers(filters = {}) {
     const queryParams = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {

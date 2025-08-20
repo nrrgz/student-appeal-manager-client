@@ -58,16 +58,19 @@ export default function StudentDashboard() {
 
   const getStatusColor = (status) => {
     switch (status) {
+      case "submitted":
       case "Submitted":
-        return "bg-blue-100 text-blue-800";
+        return "bg-yellow-100 text-yellow-800";
+      case "under review":
       case "Under Review":
-        return "bg-yellow-100 text-yellow-800";
       case "In Review":
-        return "bg-yellow-100 text-yellow-800";
+        return "bg-blue-100 text-blue-800";
+      case "awaiting information":
       case "Awaiting Info":
         return "bg-orange-100 text-orange-800";
+      case "resolved":
+      case "decision made":
       case "Review Complete":
-        return "bg-green-100 text-green-800";
       case "Resolved":
         return "bg-green-100 text-green-800";
       default:
@@ -197,9 +200,6 @@ export default function StudentDashboard() {
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                          Appeal ID
-                        </th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                           Type
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -222,9 +222,6 @@ export default function StudentDashboard() {
                     <tbody className="bg-white divide-y divide-gray-200">
                       {appeals.map((appeal) => (
                         <tr key={appeal._id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {appeal._id}
-                          </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                             {appeal.appealType || "N/A"}
                           </td>
