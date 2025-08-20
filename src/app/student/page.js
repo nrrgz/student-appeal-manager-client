@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import apiService from "../../services/api";
 import ProtectedRoute from "../../components/ProtectedRoute";
+import Footer from "../../components/Footer";
+import apiService from "../../services/api";
 
 export default function StudentDashboard() {
   const [userInfo, setUserInfo] = useState(null);
@@ -265,6 +266,7 @@ export default function StudentDashboard() {
             </div>
           </div>
         </main>
+        <Footer />
       </div>
     </ProtectedRoute>
   );

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ProtectedRoute from "../../components/ProtectedRoute";
+import Footer from "../../components/Footer";
 import apiService from "../../services/api";
 
 export default function AdminDashboard() {
@@ -561,6 +562,7 @@ export default function AdminDashboard() {
           </div>
         </div>
       </div>
+      <Footer />
     </ProtectedRoute>
   );
 }

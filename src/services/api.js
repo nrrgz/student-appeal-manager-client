@@ -290,6 +290,30 @@ class ApiService {
       method: "DELETE",
     });
   }
+
+  // File download methods
+  async downloadEvidenceFile(appealId, filename, role = "student") {
+    const endpoint = `/${role}/appeals/${appealId}/evidence/${encodeURIComponent(
+      filename
+    )}/download`;
+    return this.request(endpoint);
+  }
+
+  async downloadStudentEvidenceFile(appealId, filename) {
+    // For student downloads, the route is /api/appeals/:id/evidence/:filename/download
+    const endpoint = `/appeals/${appealId}/evidence/${encodeURIComponent(
+      filename
+    )}/download`;
+    return this.request(endpoint);
+  }
+
+  async downloadReviewerEvidenceFile(appealId, filename) {
+    return this.downloadEvidenceFile(appealId, filename, "reviewer");
+  }
+
+  async downloadAdminEvidenceFile(appealId, filename) {
+    return this.downloadEvidenceFile(appealId, filename, "admin");
+  }
 }
 
 // Create and export a single instance

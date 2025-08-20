@@ -1,6 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import ProtectedRoute from "../../components/ProtectedRoute";
+import Footer from "../../components/Footer";
+import apiService from "../../services/api";
 
 export default function StatisticsDashboard() {
   const [stats, setStats] = useState(null);
@@ -442,6 +446,7 @@ export default function StatisticsDashboard() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

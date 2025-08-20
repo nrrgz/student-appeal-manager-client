@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import ProtectedRoute from "../../components/ProtectedRoute";
+import Footer from "../../components/Footer";
 import apiService from "../../services/api";
 
 export default function ReviewerDashboard() {
@@ -518,6 +519,7 @@ export default function ReviewerDashboard() {
             </div>
           </div>
         </main>
+        <Footer />
       </div>
     </ProtectedRoute>
   );

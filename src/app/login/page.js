@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Footer from "../../components/Footer";
+import apiService from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
 
 export default function LoginPage() {
@@ -489,6 +491,7 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

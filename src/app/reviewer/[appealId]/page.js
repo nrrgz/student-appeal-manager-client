@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import ProtectedRoute from "../../../components/ProtectedRoute";
+import Footer from "../../../components/Footer";
 import apiService from "../../../services/api";
 
 export default function AppealReview() {
@@ -161,6 +162,72 @@ export default function AppealReview() {
     const file = event.target.files[0];
     if (file) {
       setUploadedFile(file);
+    }
+  };
+
+  const handleDownload = async (file) => {
+    try {
+      // Get the appeal ID from the current appeal
+      if (!appeal || !appeal.id) {
+        alert("Appeal information not available");
+        return;
+      }
+
+      // Get the filename to download
+      const filename = file.originalName || file.filename || file.name;
+      if (!filename) {
+        alert("File name not available");
+        return;
+      }
+
+      // Create the download URL
+      const downloadUrl = `${
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
+      }/api/reviewer/${appeal.id}/evidence/${encodeURIComponent(
+        filename
+      )}/download`;
+
+      // Get the auth token
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Authentication required. Please log in again.");
+        return;
+      }
+
+      // For cross-origin requests, we need to fetch the file first
+      const response = await fetch(downloadUrl, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Download failed: ${response.status} ${response.statusText}`
+        );
+      }
+
+      // Get the file blob
+      const blob = await response.blob();
+
+      // Create a blob URL and trigger download
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download =
+        file.originalName || file.filename || file.name || "download";
+
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error("Download failed:", error);
+      alert(`Download failed: ${error.message}`);
     }
   };
 
@@ -460,8 +527,11 @@ export default function AppealReview() {
                               • Uploaded {formatDate(doc.uploadedAt)}
                             </p>
                           </div>
-                          <button className="text-purple-600 hover:text-purple-800 text-sm font-medium">
-                            View
+                          <button
+                            onClick={() => handleDownload(doc)}
+                            className="text-purple-600 hover:text-purple-800 text-sm font-medium hover:bg-purple-50 px-3 py-1 rounded-md transition-colors"
+                          >
+                            Download
                           </button>
                         </div>
                       ))
@@ -695,6 +765,7 @@ export default function AppealReview() {
             </div>
           </div>
         </main>
+        <Footer />
       </div>
     </ProtectedRoute>
   );

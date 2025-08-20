@@ -2,8 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
-import apiService from "../../../services/api";
 import ProtectedRoute from "../../../components/ProtectedRoute";
+import Footer from "../../../components/Footer";
+import apiService from "../../../services/api";
 
 export default function AppealDetail() {
   const [userInfo, setUserInfo] = useState(null);
@@ -91,6 +92,78 @@ export default function AppealDetail() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
+  const handleDownload = async (file) => {
+    try {
+      // Get the appeal ID from the current appeal
+      if (!appeal || !appeal._id) {
+        alert("Appeal information not available");
+        return;
+      }
+
+      // Get the filename to download
+      const filename = file.originalName || file.filename || file.name;
+      if (!filename) {
+        alert("File name not available");
+        return;
+      }
+
+      // Create the download URL
+      const downloadUrl = `${
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
+      }/api/appeals/${appeal._id}/evidence/${encodeURIComponent(
+        filename
+      )}/download`;
+
+      // Get the auth token
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Authentication required. Please log in again.");
+        return;
+      }
+
+      // Create a temporary link element and trigger download
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download =
+        file.originalName || file.filename || file.name || "download";
+
+      // Add authorization header
+      link.setAttribute("data-token", token);
+
+      // For cross-origin requests, we need to fetch the file first
+      const response = await fetch(downloadUrl, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Download failed: ${response.status} ${response.statusText}`
+        );
+      }
+
+      // Get the file blob
+      const blob = await response.blob();
+
+      // Create a blob URL and trigger download
+      const blobUrl = window.URL.createObjectURL(blob);
+      link.href = blobUrl;
+
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error("Download failed:", error);
+      alert(`Download failed: ${error.message}`);
+    }
+  };
+
   if (!userInfo || loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -170,24 +243,24 @@ export default function AppealDetail() {
             </div>
           </div>
 
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
             <div className="flex">
               <svg
-                className="h-5 w-5 text-red-400 mt-0.5"
+                className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0"
                 fill="currentColor"
                 viewBox="0 0 20 20"
               >
                 <path
                   fillRule="evenodd"
-                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
                   clipRule="evenodd"
                 />
               </svg>
               <div className="ml-3">
-                <h3 className="text-sm font-medium text-red-800">
-                  Appeal Cannot Be Edited
+                <h3 className="text-sm font-medium text-blue-800">
+                  Appeal Information Notice
                 </h3>
-                <div className="mt-1 text-sm text-red-700">
+                <div className="mt-1 text-sm text-blue-700">
                   Once submitted, appeals cannot be modified. If you need to
                   provide additional information, please contact the appeals
                   team directly.
@@ -253,7 +326,10 @@ export default function AppealDetail() {
                             </p>
                           </div>
                         </div>
-                        <button className="text-purple-600 hover:text-purple-700 text-sm font-medium">
+                        <button
+                          onClick={() => handleDownload(file)}
+                          className="text-purple-600 hover:text-purple-700 text-sm font-medium hover:bg-purple-50 px-3 py-1 rounded-md transition-colors"
+                        >
                           Download
                         </button>
                       </div>
@@ -408,27 +484,204 @@ export default function AppealDetail() {
                 </div>
               </div>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <div className="flex">
-                  <svg
-                    className="h-5 w-5 text-blue-400 mt-0.5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-blue-800">
-                      Need Help?
-                    </h3>
-                    <div className="mt-1 text-sm text-blue-700">
-                      If you have questions about your appeal or need to provide
-                      additional information, contact the Appeals Team at
-                      appeals@sheffield.ac.uk
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                  Help & FAQ
+                </h3>
+                <div className="space-y-4">
+                  {/* Quick Help Section */}
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-start">
+                      <svg
+                        className="h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      <div className="ml-3">
+                        <h4 className="text-sm font-medium text-blue-800">
+                          Need Immediate Help?
+                        </h4>
+                        <p className="mt-1 text-sm text-blue-700">
+                          Contact the Appeals Team at{" "}
+                          <a
+                            href="mailto:appeals@sheffield.ac.uk"
+                            className="font-medium underline hover:text-blue-800"
+                          >
+                            appeals@sheffield.ac.uk
+                          </a>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* FAQ Section */}
+                  <div className="space-y-3">
+                    <details className="group">
+                      <summary className="flex items-center justify-between cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900">
+                        <span>Can I edit my appeal after submission?</span>
+                        <svg
+                          className="h-4 w-4 text-gray-500 group-open:rotate-180 transition-transform"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </summary>
+                      <div className="mt-2 text-sm text-gray-600 pl-4 border-l-2 border-gray-200">
+                        No, once submitted, appeals cannot be modified. If you
+                        need to provide additional information, please contact
+                        the appeals team directly.
+                      </div>
+                    </details>
+
+                    <details className="group">
+                      <summary className="flex items-center justify-between cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900">
+                        <span>How long does the appeal process take?</span>
+                        <svg
+                          className="h-4 w-4 text-gray-500 group-open:rotate-180 transition-transform"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </summary>
+                      <div className="mt-2 text-sm text-gray-600 pl-4 border-l-2 border-gray-200">
+                        The typical appeal process takes 4-6 weeks. Complex
+                        cases may take longer. You'll receive updates at each
+                        stage.
+                      </div>
+                    </details>
+
+                    <details className="group">
+                      <summary className="flex items-center justify-between cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900">
+                        <span>What happens if my appeal is rejected?</span>
+                        <svg
+                          className="h-4 w-4 text-gray-500 group-open:rotate-180 transition-transform"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </summary>
+                      <div className="mt-2 text-sm text-gray-600 pl-4 border-l-2 border-gray-200">
+                        If your appeal is rejected, you'll receive a detailed
+                        explanation. You may have the right to request a review
+                        of the decision.
+                      </div>
+                    </details>
+
+                    <details className="group">
+                      <summary className="flex items-center justify-between cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900">
+                        <span>How do I upload additional evidence?</span>
+                        <svg
+                          className="h-4 w-4 text-gray-500 group-open:rotate-180 transition-transform"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </summary>
+                      <div className="mt-2 text-sm text-gray-600 pl-4 border-l-2 border-gray-200">
+                        Contact the appeals team to request permission to submit
+                        additional evidence. They will guide you through the
+                        process.
+                      </div>
+                    </details>
+                  </div>
+
+                  {/* Useful Links */}
+                  <div className="pt-3 border-t border-gray-200">
+                    <h4 className="text-sm font-medium text-gray-700 mb-2">
+                      Useful Resources
+                    </h4>
+                    <div className="space-y-2 text-sm">
+                      <a
+                        href="#"
+                        className="flex items-center text-blue-600 hover:text-blue-800 hover:underline"
+                      >
+                        <svg
+                          className="h-4 w-4 mr-2"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                        Appeals Policy & Procedures
+                      </a>
+                      <a
+                        href="#"
+                        className="flex items-center text-blue-600 hover:text-blue-800 hover:underline"
+                      >
+                        <svg
+                          className="h-4 w-4 mr-2"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        Student Support Services
+                      </a>
+                      <a
+                        href="#"
+                        className="flex items-center text-blue-600 hover:text-blue-800 hover:underline"
+                      >
+                        <svg
+                          className="h-4 w-4 mr-2"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                          />
+                        </svg>
+                        Contact Academic Registry
+                      </a>
                     </div>
                   </div>
                 </div>
@@ -437,6 +690,7 @@ export default function AppealDetail() {
           </div>
         </div>
       </div>
+      <Footer />
     </ProtectedRoute>
   );
 }

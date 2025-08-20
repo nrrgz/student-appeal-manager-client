@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import ProtectedRoute from "../../../components/ProtectedRoute";
+import ProtectedRoute from "../../components/ProtectedRoute";
+import Footer from "../../components/Footer";
+import apiService from "../../services/api";
 
 export default function LateSubmissionInfo() {
   const [userInfo, setUserInfo] = useState(null);
@@ -273,6 +275,7 @@ export default function LateSubmissionInfo() {
           </div>
         </div>
       </div>
+      <Footer />
     </ProtectedRoute>
   );
 }
