@@ -345,6 +345,12 @@ class ApiService {
     });
   }
 
+  async deleteAdminNote(appealId, noteId) {
+    return this.request(`/admin/appeals/${appealId}/notes/${noteId}`, {
+      method: "DELETE",
+    });
+  }
+
   async bulkAssignAppeals(data) {
     return this.request("/admin/appeals/bulk-assign", {
       method: "POST",
@@ -441,6 +447,10 @@ class ApiService {
 
   async getReviewers() {
     return this.request("/admin/users/reviewers");
+  }
+
+  async getAdmins() {
+    return this.request("/admin/users/admins");
   }
 
   async getUserStats() {

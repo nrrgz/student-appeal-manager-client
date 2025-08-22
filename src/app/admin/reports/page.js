@@ -119,7 +119,7 @@ export default function StatisticsDashboard() {
     };
 
     fetchStats();
-  }, [dateRange]);image.png
+  }, [dateRange]);
 
   const handleDateRangeChange = (range) => {
     setDateRange(range);

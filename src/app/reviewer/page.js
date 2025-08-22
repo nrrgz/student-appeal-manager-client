@@ -439,7 +439,7 @@ export default function ReviewerDashboard() {
                     {loading ? (
                       <tr>
                         <td
-                          colSpan="6"
+                          colSpan="5"
                           className="px-6 py-4 text-center text-gray-500"
                         >
                           <div className="flex items-center justify-center">
@@ -451,7 +451,7 @@ export default function ReviewerDashboard() {
                     ) : filteredAppeals.length === 0 ? (
                       <tr>
                         <td
-                          colSpan="6"
+                          colSpan="5"
                           className="px-6 py-4 text-center text-gray-500"
                         >
                           No appeals found matching the current filters.
@@ -497,18 +497,7 @@ export default function ReviewerDashboard() {
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            <div>
-                              <div>
-                                Deadline:{" "}
-                                {new Date(appeal.deadline).toLocaleDateString()}
-                              </div>
-                              <div className="text-gray-500">
-                                Review:{" "}
-                                {new Date(
-                                  appeal.reviewDeadline
-                                ).toLocaleDateString()}
-                              </div>
-                            </div>
+                            {new Date(appeal.deadline).toLocaleDateString()}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <button

@@ -68,10 +68,10 @@ export default function AdminDashboard() {
         studentName: appeal.student
           ? `${appeal.student.firstName} ${appeal.student.lastName}`
           : "Unknown Student",
-        studentId: appeal.student?.studentId || "N/A",
-        department: appeal.student?.department || "N/A",
+        studentId: appeal.student?.studentId || "",
+        department: appeal.student?.department || "",
         status: appeal.status || "Pending",
-        grounds: appeal.appealType || "N/A",
+        grounds: appeal.appealType || "",
         submissionDate: appeal.createdAt,
         priority: appeal.priority || "Medium",
         deadline: appeal.deadline,
@@ -719,13 +719,10 @@ export default function AdminDashboard() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <a
                             href={`/admin/${appeal.id}`}
-                            className="text-indigo-600 hover:text-indigo-900 mr-4"
+                            className="text-indigo-600 hover:text-indigo-900"
                           >
                             View
                           </a>
-                          <button className="text-gray-600 hover:text-gray-900">
-                            Edit
-                          </button>
                         </td>
                       </tr>
                     ))

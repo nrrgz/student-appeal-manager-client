@@ -73,7 +73,7 @@ export default function AppealDetail() {
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
+    if (!dateString) return "";
     return new Date(dateString).toLocaleString("en-GB", {
       day: "2-digit",
       month: "long",
@@ -351,6 +351,61 @@ export default function AppealDetail() {
                 )}
               </div>
 
+              {/* Comments from Staff */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                  Comments from Staff
+                </h3>
+                {Array.isArray(appeal.notes) &&
+                appeal.notes.filter((note) => !note.isInternal).length > 0 ? (
+                  <div className="space-y-4">
+                    {appeal.notes
+                      .filter((note) => !note.isInternal)
+                      .map((comment, index) => (
+                        <div
+                          key={index}
+                          className="border-l-4 border-purple-500 pl-4 py-3 bg-purple-50 rounded-r-md"
+                        >
+                          <p className="text-sm text-gray-900 mb-2">
+                            {comment.content}
+                          </p>
+                          <div className="flex items-center justify-between text-xs text-gray-500">
+                            <span>
+                              {comment.author?.firstName}{" "}
+                              {comment.author?.lastName}
+                              {comment.author?.role &&
+                                ` (${comment.author.role})`}
+                            </span>
+                            <span>{formatDate(comment.createdAt)}</span>
+                          </div>
+                        </div>
+                      ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <svg
+                      className="mx-auto h-12 w-12 text-gray-400"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                      />
+                    </svg>
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">
+                      No comments yet
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Staff will add comments here as they review your appeal.
+                    </p>
+                  </div>
+                )}
+              </div>
+
               <div className="bg-white rounded-lg shadow p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
                   Status History & Comments
@@ -431,9 +486,7 @@ export default function AppealDetail() {
                 <div className="space-y-3 text-sm">
                   <div>
                     <span className="font-medium text-gray-700">Type:</span>
-                    <p className="text-gray-600">
-                      {appeal.appealType || "N/A"}
-                    </p>
+                    <p className="text-gray-600">{appeal.appealType || ""}</p>
                   </div>
                   <div>
                     <span className="font-medium text-gray-700">Grounds:</span>

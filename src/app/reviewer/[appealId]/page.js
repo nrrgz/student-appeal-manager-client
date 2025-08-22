@@ -396,39 +396,37 @@ export default function AppealReview() {
             </div>
 
             {/* Status and Priority */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-              <div className="bg-white shadow rounded-lg p-4">
-                <h3 className="text-sm font-medium text-gray-500">Status</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              <div className="bg-white shadow rounded-lg p-6">
+                <h3 className="text-base font-medium text-gray-500 mb-2">
+                  Status
+                </h3>
                 <span
-                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full mt-1 ${getStatusColor(
+                  className={`inline-flex px-3 py-2 text-sm font-semibold rounded-full ${getStatusColor(
                     appeal.status
                   )}`}
                 >
                   {appeal.status}
                 </span>
               </div>
-              <div className="bg-white shadow rounded-lg p-4">
-                <h3 className="text-sm font-medium text-gray-500">Priority</h3>
+              <div className="bg-white shadow rounded-lg p-6">
+                <h3 className="text-base font-medium text-gray-500 mb-2">
+                  Priority
+                </h3>
                 <span
-                  className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full mt-1 ${getPriorityColor(
+                  className={`inline-flex px-3 py-2 text-sm font-semibold rounded-full ${getPriorityColor(
                     appeal.priority
                   )}`}
                 >
                   {appeal.priority}
                 </span>
               </div>
-              <div className="bg-white shadow rounded-lg p-4">
-                <h3 className="text-sm font-medium text-gray-500">Deadline</h3>
-                <p className="text-sm font-medium text-gray-900 mt-1">
-                  {new Date(appeal.deadline).toLocaleDateString()}
-                </p>
-              </div>
-              <div className="bg-white shadow rounded-lg p-4">
-                <h3 className="text-sm font-medium text-gray-500">
-                  Review Deadline
+              <div className="bg-white shadow rounded-lg p-6">
+                <h3 className="text-base font-medium text-gray-500 mb-2">
+                  Deadline
                 </h3>
-                <p className="text-sm font-medium text-gray-900 mt-1">
-                  {new Date(appeal.reviewDeadline).toLocaleDateString()}
+                <p className="text-base font-medium text-gray-900">
+                  {new Date(appeal.deadline).toLocaleDateString()}
                 </p>
               </div>
             </div>

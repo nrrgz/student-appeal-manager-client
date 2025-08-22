@@ -23,6 +23,10 @@ export default function AppealManagement() {
   const [showDeadlineModal, setShowDeadlineModal] = useState(false);
   const [newDeadline, setNewDeadline] = useState("");
   const [deadlineReason, setDeadlineReason] = useState("");
+  const [showAssignmentModal, setShowAssignmentModal] = useState(false);
+  const [availableReviewers, setAvailableReviewers] = useState([]);
+  const [selectedReviewer, setSelectedReviewer] = useState("");
+  const [selectedPriority, setSelectedPriority] = useState("");
 
   // Check authentication
   useEffect(() => {
@@ -48,6 +52,11 @@ export default function AppealManagement() {
     }
   }, [appealId]);
 
+  // Fetch available reviewers
+  useEffect(() => {
+    fetchAvailableReviewers();
+  }, []);
+
   const fetchAppeal = async () => {
     try {
       setLoading(true);
@@ -55,11 +64,28 @@ export default function AppealManagement() {
       const response = await apiService.getAdminAppeal(appealId);
       setAppeal(response.appeal);
       setNewStatus(response.appeal.status);
+
+      // Initialize assignment values
+      if (response.appeal.assignedReviewer) {
+        setSelectedReviewer(response.appeal.assignedReviewer._id);
+      }
+      if (response.appeal.priority) {
+        setSelectedPriority(response.appeal.priority);
+      }
     } catch (error) {
       console.error("Failed to fetch appeal:", error);
       setError("Failed to load appeal data. Please try again.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAvailableReviewers = async () => {
+    try {
+      const response = await apiService.getReviewers();
+      setAvailableReviewers(response.reviewers || []);
+    } catch (error) {
+      console.error("Failed to fetch reviewers:", error);
     }
   };
 
@@ -100,6 +126,42 @@ export default function AppealManagement() {
     } catch (error) {
       console.error("Failed to add comment:", error);
       setError("Failed to add comment. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteNote = async (noteId) => {
+    if (!confirm("Are you sure you want to delete this note?") || submitting)
+      return;
+
+    try {
+      setSubmitting(true);
+      await apiService.deleteAdminNote(appealId, noteId);
+
+      // Refresh appeal data to get the updated notes
+      await fetchAppeal();
+    } catch (error) {
+      console.error("Failed to delete note:", error);
+      setError("Failed to delete note. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId) => {
+    if (!confirm("Are you sure you want to delete this comment?") || submitting)
+      return;
+
+    try {
+      setSubmitting(true);
+      await apiService.deleteAdminNote(appealId, commentId);
+
+      // Refresh appeal data to get the updated comments
+      await fetchAppeal();
+    } catch (error) {
+      console.error("Failed to delete comment:", error);
+      setError("Failed to delete comment. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -204,6 +266,15 @@ export default function AppealManagement() {
     }
   };
 
+  const formatDeadline = (dateString) => {
+    if (!dateString) return "No deadline set";
+    try {
+      return new Date(dateString).toLocaleDateString();
+    } catch (error) {
+      return "Invalid deadline";
+    }
+  };
+
   const handleSetDeadline = async () => {
     if (!newDeadline || submitting) return;
 
@@ -227,21 +298,34 @@ export default function AppealManagement() {
     }
   };
 
-  const formatDeadline = (deadline) => {
-    if (!deadline) return "No deadline set";
-    const date = new Date(deadline);
-    const now = new Date();
-    const isOverdue = date < now;
+  const handleAssignAppeal = async () => {
+    if (submitting) return;
 
-    return (
-      <span
-        className={isOverdue ? "text-red-600 font-semibold" : "text-gray-700"}
-      >
-        {date.toLocaleDateString()}{" "}
-        {date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-        {isOverdue && " (OVERDUE)"}
-      </span>
-    );
+    try {
+      setSubmitting(true);
+      const assignmentData = {};
+
+      // Handle reviewer assignment (empty string means unassign)
+      if (selectedReviewer !== undefined) {
+        assignmentData.assignedReviewer = selectedReviewer || null;
+      }
+      if (selectedPriority) {
+        assignmentData.priority = selectedPriority;
+      }
+
+      await apiService.updateAppealAssignment(appealId, assignmentData);
+
+      // Refresh appeal data
+      await fetchAppeal();
+      setShowAssignmentModal(false);
+      setSelectedReviewer("");
+      setSelectedPriority("");
+    } catch (error) {
+      console.error("Failed to assign appeal:", error);
+      setError("Failed to assign appeal. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleDownload = async (file) => {
@@ -525,59 +609,55 @@ export default function AppealManagement() {
                 </div>
               </div>
 
-              {/* Status Management */}
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Change Status
-                </h3>
-                <div className="flex items-center space-x-4">
-                  <select
-                    className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
-                    value={newStatus}
-                    onChange={(e) => setNewStatus(e.target.value)}
-                    disabled={submitting}
-                  >
-                    <option value="submitted">Submitted</option>
-                    <option value="under review">Under Review</option>
-                    <option value="awaiting information">
-                      Awaiting Information
-                    </option>
-                    <option value="decision made">Decision Made</option>
-                    <option value="resolved">Resolved</option>
-                    <option value="rejected">Rejected</option>
-                  </select>
-                  <button
-                    onClick={handleStatusChange}
-                    disabled={submitting}
-                    className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {submitting ? "Updating..." : "Update Status"}
-                  </button>
-                </div>
-              </div>
-
               {/* Student Comments */}
               <div className="bg-white rounded-lg shadow p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
                   Comments Visible to Student
                 </h3>
                 <div className="space-y-4">
-                  {Array.isArray(appeal.comments) &&
-                  appeal.comments.length > 0 ? (
-                    appeal.comments.map((comment, index) => (
-                      <div
-                        key={index}
-                        className="border-l-4 border-indigo-500 pl-4 py-2"
-                      >
-                        <p className="text-sm text-gray-900">
-                          {comment.content}
-                        </p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {comment.author?.firstName} {comment.author?.lastName}{" "}
-                          • {formatDate(comment.createdAt)}
-                        </p>
-                      </div>
-                    ))
+                  {Array.isArray(appeal.notes) &&
+                  appeal.notes.filter((note) => !note.isInternal).length > 0 ? (
+                    appeal.notes
+                      .filter((note) => !note.isInternal)
+                      .map((comment, index) => (
+                        <div
+                          key={index}
+                          className="border-l-4 border-indigo-500 pl-4 py-2"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <p className="text-sm text-gray-900">
+                                {comment.content}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                {comment.author?.firstName}{" "}
+                                {comment.author?.lastName} •{" "}
+                                {formatDate(comment.createdAt)}
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => handleDeleteComment(comment._id)}
+                              disabled={submitting}
+                              className="ml-3 text-red-600 hover:text-red-800 text-sm font-medium hover:bg-red-50 px-2 py-1 rounded-md transition-colors disabled:opacity-50"
+                              title="Delete comment"
+                            >
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      ))
                   ) : (
                     <p className="text-gray-500 text-sm">No comments yet.</p>
                   )}
@@ -652,23 +732,145 @@ export default function AppealManagement() {
 
             {/* Sidebar */}
             <div className="space-y-6">
+              {/* Status Management */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                  Change Status
+                </h3>
+                <div className="flex flex-col space-y-3">
+                  <select
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
+                    value={newStatus}
+                    onChange={(e) => setNewStatus(e.target.value)}
+                    disabled={submitting}
+                  >
+                    <option value="submitted">Submitted</option>
+                    <option value="under review">Under Review</option>
+                    <option value="awaiting information">
+                      Awaiting Information
+                    </option>
+                    <option value="decision made">Decision Made</option>
+                    <option value="resolved">Resolved</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                  <button
+                    onClick={handleStatusChange}
+                    disabled={submitting}
+                    className="w-full bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {submitting ? "Updating..." : "Update Status"}
+                  </button>
+                </div>
+              </div>
+
+              {/* Appeal Assignment */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                  Assign Appeal
+                </h3>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Current Reviewer
+                    </label>
+                    <p className="text-sm text-gray-900">
+                      {appeal?.assignedReviewer ? (
+                        `${appeal.assignedReviewer.firstName} ${appeal.assignedReviewer.lastName}`
+                      ) : (
+                        <span className="text-gray-500">
+                          No reviewer assigned
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Current Priority
+                    </label>
+                    <p className="text-sm text-gray-900">
+                      {appeal?.priority ? (
+                        <span
+                          className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(
+                            appeal.priority
+                          )}`}
+                        >
+                          {appeal.priority}
+                        </span>
+                      ) : (
+                        <span className="text-gray-500">No priority set</span>
+                      )}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => {
+                      // Initialize form with current values
+                      if (appeal?.assignedReviewer) {
+                        setSelectedReviewer(appeal.assignedReviewer._id);
+                      } else {
+                        setSelectedReviewer("");
+                      }
+                      if (appeal?.priority) {
+                        setSelectedPriority(appeal.priority);
+                      } else {
+                        setSelectedPriority("");
+                      }
+                      setShowAssignmentModal(true);
+                    }}
+                    className="w-full bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Assign/Update Assignment
+                  </button>
+                </div>
+              </div>
+
               {/* Internal Notes */}
               <div className="bg-white rounded-lg shadow p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
                   Internal Notes
                 </h3>
                 <div className="space-y-3 mb-4">
-                  {Array.isArray(appeal.internalNotes) &&
-                  appeal.internalNotes.length > 0 ? (
-                    appeal.internalNotes.map((note, index) => (
-                      <div key={index} className="p-3 bg-yellow-50 rounded-md">
-                        <p className="text-sm text-gray-900">{note.content}</p>
-                        <p className="text-xs text-gray-500 mt-1">
-                          {note.author?.firstName} {note.author?.lastName} •{" "}
-                          {formatDate(note.createdAt)}
-                        </p>
-                      </div>
-                    ))
+                  {Array.isArray(appeal.notes) &&
+                  appeal.notes.filter((note) => note.isInternal).length > 0 ? (
+                    appeal.notes
+                      .filter((note) => note.isInternal)
+                      .map((note, index) => (
+                        <div
+                          key={index}
+                          className="p-3 bg-yellow-50 rounded-md"
+                        >
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1">
+                              <p className="text-sm text-gray-900">
+                                {note.content}
+                              </p>
+                              <p className="text-xs text-gray-500 mt-1">
+                                {note.author?.firstName} {note.author?.lastName}{" "}
+                                • {formatDate(note.createdAt)}
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => handleDeleteNote(note._id)}
+                              disabled={submitting}
+                              className="ml-3 text-red-600 hover:text-red-800 text-sm font-medium hover:bg-red-50 px-2 py-1 rounded-md transition-colors disabled:opacity-50"
+                              title="Delete note"
+                            >
+                              <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                                />
+                              </svg>
+                            </button>
+                          </div>
+                        </div>
+                      ))
                   ) : (
                     <p className="text-gray-500 text-sm">
                       No internal notes yet.
@@ -760,36 +962,6 @@ export default function AppealManagement() {
                   )}
                 </div>
               </div>
-
-              {/* Quick Actions */}
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Quick Actions
-                </h3>
-                <div className="space-y-2">
-                  <button
-                    onClick={() => setNewStatus("resolved")}
-                    disabled={submitting}
-                    className="w-full bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Approve Appeal
-                  </button>
-                  <button
-                    onClick={() => setNewStatus("rejected")}
-                    disabled={submitting}
-                    className="w-full bg-red-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Reject Appeal
-                  </button>
-                  <button
-                    onClick={() => setNewStatus("awaiting information")}
-                    disabled={submitting}
-                    className="w-full bg-blue-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Request More Info
-                  </button>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -826,27 +998,28 @@ export default function AppealManagement() {
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
                     Deadline Date & Time
                   </label>
                   <input
                     type="datetime-local"
                     value={newDeadline}
                     onChange={(e) => setNewDeadline(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                     min={new Date().toISOString().slice(0, 16)}
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
                     Reason (Optional)
                   </label>
                   <textarea
                     value={deadlineReason}
                     onChange={(e) => setDeadlineReason(e.target.value)}
                     placeholder="Why is this deadline being set/updated?"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    style={{ color: "#374151" }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                     rows={3}
                   />
                 </div>
@@ -864,6 +1037,120 @@ export default function AppealManagement() {
                     className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {submitting ? "Setting..." : "Set Deadline"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Assignment Modal */}
+      {showAssignmentModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">
+                  Assign Appeal
+                </h3>
+                <button
+                  onClick={() => {
+                    setShowAssignmentModal(false);
+                    // Reset form to current values
+                    if (appeal?.assignedReviewer) {
+                      setSelectedReviewer(appeal.assignedReviewer._id);
+                    } else {
+                      setSelectedReviewer("");
+                    }
+                    if (appeal?.priority) {
+                      setSelectedPriority(appeal.priority);
+                    } else {
+                      setSelectedPriority("");
+                    }
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
+                    Assign to Reviewer
+                  </label>
+                  <select
+                    value={selectedReviewer}
+                    onChange={(e) => setSelectedReviewer(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                  >
+                    <option value="">Select a reviewer</option>
+                    <option value="">Unassign reviewer</option>
+                    {availableReviewers.map((reviewer) => (
+                      <option key={reviewer._id} value={reviewer._id}>
+                        {reviewer.firstName} {reviewer.lastName}{" "}
+                        {reviewer.department ? `(${reviewer.department})` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
+                    Set Priority
+                  </label>
+                  <select
+                    value={selectedPriority}
+                    onChange={(e) => setSelectedPriority(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
+                  >
+                    <option value="">Keep current priority</option>
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                  </select>
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    onClick={() => {
+                      setShowAssignmentModal(false);
+                      // Reset form to current values
+                      if (appeal?.assignedReviewer) {
+                        setSelectedReviewer(appeal.assignedReviewer._id);
+                      } else {
+                        setSelectedReviewer("");
+                      }
+                      if (appeal?.priority) {
+                        setSelectedPriority(appeal.priority);
+                      } else {
+                        setSelectedPriority("");
+                      }
+                    }}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleAssignAppeal}
+                    disabled={submitting}
+                    className="px-4 py-2 text-sm font-medium text-white bg-green-600 border border-transparent rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {submitting ? "Assigning..." : "Assign Appeal"}
                   </button>
                 </div>
               </div>
