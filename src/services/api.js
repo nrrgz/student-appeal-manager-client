@@ -145,10 +145,39 @@ class ApiService {
   }
 
   async createAppeal(appealData) {
-    return this.request("/appeals", {
-      method: "POST",
-      body: JSON.stringify(appealData),
-    });
+    // Check if appealData is FormData (for file uploads)
+    if (appealData instanceof FormData) {
+      const token = this.getToken();
+      const url = `${this.baseURL}/appeals`;
+
+      const config = {
+        method: "POST",
+        body: appealData,
+        headers: {},
+      };
+
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+
+      // Don't set Content-Type for FormData - let the browser set it with boundary
+      const response = await fetch(url, config);
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || `HTTP error! status: ${response.status}`
+        );
+      }
+
+      return data;
+    } else {
+      // Handle regular JSON data
+      return this.request("/appeals", {
+        method: "POST",
+        body: JSON.stringify(appealData),
+      });
+    }
   }
 
   // Reviewer methods
@@ -172,6 +201,91 @@ class ApiService {
       method: "POST",
       body: JSON.stringify(data),
     });
+  }
+
+  async downloadReviewerEvidenceFile(appealId, filename) {
+    const token = this.getToken();
+    const url = `${
+      this.baseURL
+    }/reviewer/appeals/${appealId}/evidence/${encodeURIComponent(
+      filename
+    )}/download`;
+
+    const config = {
+      method: "GET",
+      headers: {},
+    };
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    const response = await fetch(url, config);
+
+    if (!response.ok) {
+      throw new Error(
+        `Download failed: ${response.status} ${response.statusText}`
+      );
+    }
+
+    return response.blob();
+  }
+
+  async downloadAdminEvidenceFile(appealId, filename) {
+    const token = this.getToken();
+    const url = `${
+      this.baseURL
+    }/admin/appeals/${appealId}/evidence/${encodeURIComponent(
+      filename
+    )}/download`;
+
+    const config = {
+      method: "GET",
+      headers: {},
+    };
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    const response = await fetch(url, config);
+
+    if (!response.ok) {
+      throw new Error(
+        `Download failed: ${response.status} ${response.statusText}`
+      );
+    }
+
+    return response.blob();
+  }
+
+  async uploadReviewerEvidence(appealId, files) {
+    const token = this.getToken();
+    const url = `${this.baseURL}/reviewer/appeals/${appealId}/evidence`;
+
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append("evidence", file);
+    });
+
+    const config = {
+      method: "POST",
+      body: formData,
+      headers: {},
+    };
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    const response = await fetch(url, config);
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || `HTTP error! status: ${response.status}`);
+    }
+
+    return data;
   }
 
   // Admin methods
@@ -212,6 +326,13 @@ class ApiService {
 
   async updateAppealPriority(appealId, data) {
     return this.request(`/admin/appeals/${appealId}/priority`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  }
+
+  async setAppealDeadline(appealId, data) {
+    return this.request(`/admin/appeals/${appealId}/deadline`, {
       method: "PUT",
       body: JSON.stringify(data),
     });
@@ -336,6 +457,44 @@ class ApiService {
   async deactivateUser(userId) {
     return this.request(`/admin/users/${userId}`, {
       method: "DELETE",
+    });
+  }
+
+  // Deadline management methods
+  async setAppealDeadline(appealId, deadlineData) {
+    return this.request(`/admin/appeals/${appealId}/deadline`, {
+      method: "PUT",
+      body: JSON.stringify(deadlineData),
+    });
+  }
+
+  async removeAppealDeadline(appealId, reason) {
+    return this.request(`/admin/appeals/${appealId}/deadline`, {
+      method: "DELETE",
+      body: JSON.stringify({ reason }),
+    });
+  }
+
+  async getAppealsWithDeadlines(filters = {}) {
+    const queryParams = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (value) queryParams.append(key, value);
+    });
+
+    const endpoint = queryParams.toString()
+      ? `/admin/appeals/deadlines?${queryParams.toString()}`
+      : "/admin/appeals/deadlines";
+
+    return this.request(endpoint);
+  }
+
+  async setBulkDeadlines(appealIds, deadlineData) {
+    return this.request("/admin/appeals/bulk-deadlines", {
+      method: "PUT",
+      body: JSON.stringify({
+        appealIds,
+        ...deadlineData,
+      }),
     });
   }
 

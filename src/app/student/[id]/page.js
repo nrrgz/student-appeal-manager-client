@@ -94,6 +94,15 @@ export default function AppealDetail() {
 
   const handleDownload = async (file) => {
     try {
+      // Debug: Log the file object to see what's available
+      console.log("File object for download:", file);
+      console.log("File properties:", {
+        originalName: file.originalName,
+        filename: file.filename,
+        name: file.name,
+        path: file.path,
+      });
+
       // Get the appeal ID from the current appeal
       if (!appeal || !appeal._id) {
         alert("Appeal information not available");
@@ -106,6 +115,8 @@ export default function AppealDetail() {
         alert("File name not available");
         return;
       }
+
+      console.log("Using filename for download:", filename);
 
       // Create the download URL
       const downloadUrl = `${

@@ -96,6 +96,128 @@ export default function AppealReview() {
     }
   };
 
+  const handleDownload = async (file) => {
+    try {
+      // Debug: Log the file object to see what's available
+      console.log("File object for download:", file);
+      console.log("File properties:", {
+        originalName: file.originalName,
+        filename: file.filename,
+        name: file.name,
+        path: file.path,
+      });
+
+      // Get the appeal ID from the current appeal
+      if (!appeal || !appeal.id) {
+        alert("Appeal information not available");
+        return;
+      }
+
+      // Get the filename to download
+      const filename = file.originalName || file.filename || file.name;
+      if (!filename) {
+        alert("File name not available");
+        return;
+      }
+
+      console.log("Using filename for download:", filename);
+
+      // Create the download URL
+      const downloadUrl = `${
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
+      }/api/reviewer/appeals/${appeal.id}/evidence/${encodeURIComponent(
+        filename
+      )}/download`;
+
+      // Get the auth token
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Authentication required. Please log in again.");
+        return;
+      }
+
+      // Create a temporary link element and trigger download
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download =
+        file.originalName || file.filename || file.name || "download";
+
+      // Add authorization header
+      link.setAttribute("data-token", token);
+
+      // For cross-origin requests, we need to fetch the file first
+      const response = await fetch(downloadUrl, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Download failed: ${response.status} ${response.statusText}`
+        );
+      }
+
+      // Get the file blob
+      const blob = await response.blob();
+
+      // Create a blob URL and trigger download
+      const blobUrl = window.URL.createObjectURL(blob);
+      link.href = blobUrl;
+
+      // Trigger download
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error("Download failed:", error);
+      alert(`Download failed: ${error.message}`);
+    }
+  };
+
+  const handleUploadEvidence = async () => {
+    if (!uploadedFile) return;
+
+    try {
+      setSubmitting(true);
+      setError(null);
+
+      // Upload the file using the API service
+      const response = await apiService.uploadReviewerEvidence(appealId, [
+        uploadedFile,
+      ]);
+
+      console.log("Evidence uploaded successfully:", response);
+
+      // Reset form and refresh appeal data
+      setUploadedFile(null);
+      setShowUploadForm(false);
+      await fetchAppeal();
+
+      alert("Evidence uploaded successfully!");
+    } catch (error) {
+      console.error("Failed to upload evidence:", error);
+      setError(error.message || "Failed to upload evidence. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleString("en-GB", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   const handleAddNote = async () => {
     if (!newNote.trim()) return;
 
@@ -165,72 +287,6 @@ export default function AppealReview() {
     }
   };
 
-  const handleDownload = async (file) => {
-    try {
-      // Get the appeal ID from the current appeal
-      if (!appeal || !appeal.id) {
-        alert("Appeal information not available");
-        return;
-      }
-
-      // Get the filename to download
-      const filename = file.originalName || file.filename || file.name;
-      if (!filename) {
-        alert("File name not available");
-        return;
-      }
-
-      // Create the download URL
-      const downloadUrl = `${
-        process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
-      }/api/reviewer/${appeal.id}/evidence/${encodeURIComponent(
-        filename
-      )}/download`;
-
-      // Get the auth token
-      const token = localStorage.getItem("token");
-      if (!token) {
-        alert("Authentication required. Please log in again.");
-        return;
-      }
-
-      // For cross-origin requests, we need to fetch the file first
-      const response = await fetch(downloadUrl, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(
-          `Download failed: ${response.status} ${response.statusText}`
-        );
-      }
-
-      // Get the file blob
-      const blob = await response.blob();
-
-      // Create a blob URL and trigger download
-      const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = blobUrl;
-      link.download =
-        file.originalName || file.filename || file.name || "download";
-
-      // Trigger download
-      document.body.appendChild(link);
-      link.click();
-
-      // Cleanup
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(blobUrl);
-    } catch (error) {
-      console.error("Download failed:", error);
-      alert(`Download failed: ${error.message}`);
-    }
-  };
-
   const handleSubmitReview = async () => {
     if (!recommendation.trim() || !decision.trim()) return;
 
@@ -288,17 +344,6 @@ export default function AppealReview() {
       default:
         return "bg-gray-100 text-gray-800";
     }
-  };
-
-  const formatDate = (dateString) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleString("en-GB", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
   };
 
   if (!userInfo) {
@@ -496,9 +541,50 @@ export default function AppealReview() {
 
                 {/* Evidence */}
                 <div className="bg-white shadow rounded-lg p-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">
-                    Supporting Evidence
-                  </h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-medium text-gray-900">
+                      Supporting Evidence
+                    </h3>
+                    <button
+                      onClick={() => setShowUploadForm(!showUploadForm)}
+                      className="bg-purple-600 hover:bg-purple-700 text-white px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                    >
+                      {showUploadForm ? "Cancel Upload" : "Upload Evidence"}
+                    </button>
+                  </div>
+
+                  {/* Upload Form */}
+                  {showUploadForm && (
+                    <div className="mb-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
+                      <h4 className="text-sm font-medium text-gray-900 mb-3">
+                        Upload Additional Evidence
+                      </h4>
+                      <div className="space-y-3">
+                        <input
+                          type="file"
+                          onChange={(e) => setUploadedFile(e.target.files[0])}
+                          accept=".pdf,.doc,.docx,.jpg,.jpeg,.png,.txt"
+                          className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100"
+                        />
+                        {uploadedFile && (
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-600">
+                              {uploadedFile.name} (
+                              {(uploadedFile.size / 1024 / 1024).toFixed(2)} MB)
+                            </span>
+                            <button
+                              onClick={handleUploadEvidence}
+                              disabled={submitting}
+                              className="bg-green-600 hover:bg-green-700 text-white px-3 py-2 rounded-md text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {submitting ? "Uploading..." : "Upload"}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {console.log(
                     "Reviewer rendering evidence section:",
                     appeal.evidence
@@ -525,6 +611,11 @@ export default function AppealReview() {
                                   )} MB`
                                 : "Unknown size"}{" "}
                               • Uploaded {formatDate(doc.uploadedAt)}
+                              {doc.uploadedByRole && (
+                                <span className="ml-2 text-xs text-gray-400">
+                                  by {doc.uploadedByRole}
+                                </span>
+                              )}
                             </p>
                           </div>
                           <button

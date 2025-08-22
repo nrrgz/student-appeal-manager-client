@@ -50,6 +50,8 @@ export const AuthProvider = ({ children }) => {
       // Store token
       apiService.setToken(response.token, credentials.rememberMe);
 
+      localStorage.setItem("token", response.token);
+
       // Set user data
       setUser(response.user);
 

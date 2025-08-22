@@ -21,6 +21,7 @@ export default function AdminDashboard() {
     status: "",
     date: "",
     grounds: "",
+    deadlineStatus: "",
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -73,6 +74,7 @@ export default function AdminDashboard() {
         grounds: appeal.appealType || "N/A",
         submissionDate: appeal.createdAt,
         priority: appeal.priority || "Medium",
+        deadline: appeal.deadline,
         assignedReviewer: appeal.assignedReviewer
           ? `${appeal.assignedReviewer.firstName} ${appeal.assignedReviewer.lastName}`
           : "Unassigned",
@@ -88,6 +90,9 @@ export default function AdminDashboard() {
         pending: stats.submitted || 0,
         resolved: (stats.resolved || 0) + (stats["decision made"] || 0),
         highPriority: 0, // Will be calculated from appeals data
+        overdue: dashboardResponse.deadlineSummary?.overdue || 0,
+        dueToday: dashboardResponse.deadlineSummary?.dueToday || 0,
+        dueThisWeek: dashboardResponse.deadlineSummary?.dueThisWeek || 0,
       });
 
       // Calculate high priority count
@@ -140,6 +145,34 @@ export default function AdminDashboard() {
       });
     }
 
+    if (newFilters.deadlineStatus) {
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const weekFromNow = new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+      filtered = filtered.filter((appeal) => {
+        if (!appeal.deadline) {
+          return newFilters.deadlineStatus === "noDeadline";
+        }
+
+        const deadline = new Date(appeal.deadline);
+
+        switch (newFilters.deadlineStatus) {
+          case "overdue":
+            return deadline < now;
+          case "dueToday":
+            return (
+              deadline >= today &&
+              deadline < new Date(today.getTime() + 24 * 60 * 60 * 1000)
+            );
+          case "dueThisWeek":
+            return deadline >= now && deadline <= weekFromNow;
+          default:
+            return true;
+        }
+      });
+    }
+
     setFilteredAppeals(filtered);
   };
 
@@ -149,6 +182,7 @@ export default function AdminDashboard() {
       status: "",
       date: "",
       grounds: "",
+      deadlineStatus: "",
     });
     setFilteredAppeals(appeals);
   };
@@ -393,6 +427,97 @@ export default function AdminDashboard() {
             </div>
           </div>
 
+          {/* Deadline Statistics */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-red-500 rounded-md flex items-center justify-center">
+                    <svg
+                      className="w-5 h-5 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                      />
+                    </svg>
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-500">
+                    Overdue Appeals
+                  </p>
+                  <p className="text-2xl font-semibold text-red-600">
+                    {dashboardStats.overdue || 0}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-orange-500 rounded-md flex items-center justify-center">
+                    <svg
+                      className="w-5 h-5 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-500">Due Today</p>
+                  <p className="text-2xl font-semibold text-orange-600">
+                    {dashboardStats.dueToday || 0}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-blue-500 rounded-md flex items-center justify-center">
+                    <svg
+                      className="w-5 h-5 text-white"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                  </div>
+                </div>
+                <div className="ml-4">
+                  <p className="text-sm font-medium text-gray-500">
+                    Due This Week
+                  </p>
+                  <p className="text-2xl font-semibold text-blue-600">
+                    {dashboardStats.dueThisWeek || 0}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           {/* Filters */}
           <div className="bg-white rounded-lg shadow mb-6">
             <div className="px-6 py-4 border-b border-gray-200">
@@ -454,6 +579,24 @@ export default function AdminDashboard() {
                     onChange={(e) => handleFilterChange("date", e.target.value)}
                   />
                 </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Deadline Status
+                  </label>
+                  <select
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
+                    value={filters.deadlineStatus}
+                    onChange={(e) =>
+                      handleFilterChange("deadlineStatus", e.target.value)
+                    }
+                  >
+                    <option value="">All Deadlines</option>
+                    <option value="overdue">Overdue</option>
+                    <option value="dueToday">Due Today</option>
+                    <option value="dueThisWeek">Due This Week</option>
+                    <option value="noDeadline">No Deadline</option>
+                  </select>
+                </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -505,6 +648,9 @@ export default function AdminDashboard() {
                       Priority
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Deadline
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                       Date
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -549,6 +695,23 @@ export default function AdminDashboard() {
                           >
                             {appeal.priority}
                           </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {appeal.deadline ? (
+                            <span
+                              className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                new Date(appeal.deadline) < new Date()
+                                  ? "bg-red-100 text-red-800"
+                                  : "bg-blue-100 text-blue-800"
+                              }`}
+                            >
+                              {new Date(appeal.deadline).toLocaleDateString()}
+                              {new Date(appeal.deadline) < new Date() &&
+                                " (OVERDUE)"}
+                            </span>
+                          ) : (
+                            <span className="text-gray-500">No deadline</span>
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           {new Date(appeal.submissionDate).toLocaleDateString()}

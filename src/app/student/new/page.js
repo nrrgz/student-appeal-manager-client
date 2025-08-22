@@ -321,39 +321,59 @@ export default function NewAppeal() {
       setLoading(true);
       setError(null);
 
-      // Prepare appeal data for API - match server expectations exactly
-      const appealData = {
-        declaration: formData.declaration,
-        deadlineCheck: formData.deadlineCheck,
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        studentId: formData.studentId,
-        email: formData.email,
-        phone: formData.phone || "",
-        department: formData.department, // Added department field
-        hasAdviser: formData.hasAdviser,
-        adviserName: formData.hasAdviser ? formData.adviserName : "",
-        adviserEmail: formData.hasAdviser ? formData.adviserEmail : "",
-        adviserPhone: formData.hasAdviser ? formData.adviserPhone : "",
-        appealType: formData.appealType,
-        grounds: formData.grounds,
-        statement: formData.statement,
-        // Include uploaded file information - match server schema
-        evidence: uploadedFiles.map((fileObj) => ({
-          filename: fileObj.name,
-          originalName: fileObj.name,
-          path: `/uploads/${fileObj.name}`, // This would be the actual file path on server
-          fileSize: fileObj.size,
-          uploadedAt: new Date().toISOString(),
-        })),
-        // Add missing required fields
-        moduleCode: "", // Optional field
-        academicYear: new Date().getFullYear().toString(),
-        semester: "1", // Default to semester 1
-        confirmAll: formData.confirmAll,
-      };
+      // Create FormData for file upload
+      const formDataToSend = new FormData();
 
-      console.log("Submitting appeal data:", appealData);
+      // Add all the form fields
+      formDataToSend.append("declaration", formData.declaration);
+      formDataToSend.append("deadlineCheck", formData.deadlineCheck);
+      formDataToSend.append("firstName", formData.firstName);
+      formDataToSend.append("lastName", formData.lastName);
+      formDataToSend.append("studentId", formData.studentId);
+      formDataToSend.append("email", formData.email);
+      formDataToSend.append("phone", formData.phone || "");
+      formDataToSend.append("department", formData.department);
+      formDataToSend.append("hasAdviser", formData.hasAdviser);
+      formDataToSend.append(
+        "adviserName",
+        formData.hasAdviser ? formData.adviserName : ""
+      );
+      formDataToSend.append(
+        "adviserEmail",
+        formData.hasAdviser ? formData.adviserEmail : ""
+      );
+      formDataToSend.append(
+        "adviserPhone",
+        formData.hasAdviser ? formData.adviserPhone : ""
+      );
+      formDataToSend.append("appealType", formData.appealType);
+      // Add grounds as individual array items
+      formData.grounds.forEach((ground) => {
+        formDataToSend.append("grounds", ground);
+      });
+      formDataToSend.append("statement", formData.statement);
+      formDataToSend.append("moduleCode", "");
+      formDataToSend.append(
+        "academicYear",
+        new Date().getFullYear().toString()
+      );
+      formDataToSend.append("semester", "1");
+      formDataToSend.append("confirmAll", formData.confirmAll);
+
+      // Add the actual files
+      uploadedFiles.forEach((fileObj) => {
+        console.log("Appending file to FormData:", fileObj);
+        console.log("File object:", fileObj.file);
+        formDataToSend.append("evidence", fileObj.file);
+      });
+
+      console.log("Submitting appeal with FormData");
+      console.log("Uploaded files:", uploadedFiles);
+      console.log("FormData entries:");
+      for (let [key, value] of formDataToSend.entries()) {
+        console.log(key, value);
+      }
+
       console.log("User info from state:", userInfo);
       console.log("Form data studentId:", formData.studentId);
       console.log("User studentId:", userInfo.studentId);
@@ -361,12 +381,11 @@ export default function NewAppeal() {
         "StudentId match:",
         formData.studentId === userInfo.studentId
       );
-      console.log("Evidence being sent:", appealData.evidence);
       console.log("Uploaded files state:", uploadedFiles);
       console.log("Uploaded files length:", uploadedFiles.length);
 
-      // Submit appeal to API
-      const response = await apiService.createAppeal(appealData);
+      // Submit appeal to API with FormData
+      const response = await apiService.createAppeal(formDataToSend);
 
       console.log("Appeal submitted successfully:", response);
 

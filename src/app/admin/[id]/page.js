@@ -20,6 +20,9 @@ export default function AppealManagement() {
   const [uploadedFile, setUploadedFile] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
   const [submitting, setSubmitting] = useState(false);
+  const [showDeadlineModal, setShowDeadlineModal] = useState(false);
+  const [newDeadline, setNewDeadline] = useState("");
+  const [deadlineReason, setDeadlineReason] = useState("");
 
   // Check authentication
   useEffect(() => {
@@ -201,8 +204,57 @@ export default function AppealManagement() {
     }
   };
 
+  const handleSetDeadline = async () => {
+    if (!newDeadline || submitting) return;
+
+    try {
+      setSubmitting(true);
+      await apiService.setAppealDeadline(appealId, {
+        deadline: newDeadline,
+        reason: deadlineReason,
+      });
+
+      // Refresh appeal data to get the updated deadline
+      await fetchAppeal();
+      setShowDeadlineModal(false);
+      setNewDeadline("");
+      setDeadlineReason("");
+    } catch (error) {
+      console.error("Failed to set deadline:", error);
+      setError("Failed to set deadline. Please try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const formatDeadline = (deadline) => {
+    if (!deadline) return "No deadline set";
+    const date = new Date(deadline);
+    const now = new Date();
+    const isOverdue = date < now;
+
+    return (
+      <span
+        className={isOverdue ? "text-red-600 font-semibold" : "text-gray-700"}
+      >
+        {date.toLocaleDateString()}{" "}
+        {date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+        {isOverdue && " (OVERDUE)"}
+      </span>
+    );
+  };
+
   const handleDownload = async (file) => {
     try {
+      // Debug: Log the file object to see what's available
+      console.log("File object for download:", file);
+      console.log("File properties:", {
+        originalName: file.originalName,
+        filename: file.filename,
+        name: file.name,
+        path: file.path,
+      });
+
       // Get the appeal ID from the current appeal
       if (!appeal || !appeal._id) {
         alert("Appeal information not available");
@@ -216,10 +268,12 @@ export default function AppealManagement() {
         return;
       }
 
+      console.log("Using filename for download:", filename);
+
       // Create the download URL
       const downloadUrl = `${
         process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
-      }/api/admin/${appeal._id}/evidence/${encodeURIComponent(
+      }/api/admin/appeals/${appeal._id}/evidence/${encodeURIComponent(
         filename
       )}/download`;
 
@@ -229,6 +283,15 @@ export default function AppealManagement() {
         alert("Authentication required. Please log in again.");
         return;
       }
+
+      // Create a temporary link element and trigger download
+      const link = document.createElement("a");
+      link.href = downloadUrl;
+      link.download =
+        file.originalName || file.filename || file.name || "download";
+
+      // Add authorization header
+      link.setAttribute("data-token", token);
 
       // For cross-origin requests, we need to fetch the file first
       const response = await fetch(downloadUrl, {
@@ -249,10 +312,7 @@ export default function AppealManagement() {
 
       // Create a blob URL and trigger download
       const blobUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
       link.href = blobUrl;
-      link.download =
-        file.originalName || file.filename || file.name || "download";
 
       // Trigger download
       document.body.appendChild(link);
@@ -362,6 +422,18 @@ export default function AppealManagement() {
                     >
                       {appeal.priority || "No"} Priority
                     </span>
+                    {appeal.deadline && (
+                      <span
+                        className={`inline-flex px-3 py-1 text-sm font-semibold rounded-full ${
+                          new Date(appeal.deadline) < new Date()
+                            ? "bg-red-100 text-red-800"
+                            : "bg-blue-100 text-blue-800"
+                        }`}
+                      >
+                        Deadline:{" "}
+                        {new Date(appeal.deadline).toLocaleDateString()}
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -413,6 +485,22 @@ export default function AppealManagement() {
                     <p className="mt-1 text-sm text-gray-900">
                       {formatDate(appeal.createdAt)}
                     </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700">
+                      Current Deadline
+                    </label>
+                    <div className="flex items-center space-x-2">
+                      <p className="mt-1 text-sm text-gray-900">
+                        {formatDeadline(appeal.deadline)}
+                      </p>
+                      <button
+                        onClick={() => setShowDeadlineModal(true)}
+                        className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
+                      >
+                        {appeal.deadline ? "Update" : "Set"} Deadline
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -705,8 +793,86 @@ export default function AppealManagement() {
             </div>
           </div>
         </div>
-        <Footer />
       </div>
+
+      {/* Deadline Modal */}
+      {showDeadlineModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-medium text-gray-900">
+                  {appeal?.deadline ? "Update" : "Set"} Appeal Deadline
+                </h3>
+                <button
+                  onClick={() => setShowDeadlineModal(false)}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg
+                    className="w-6 h-6"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Deadline Date & Time
+                  </label>
+                  <input
+                    type="datetime-local"
+                    value={newDeadline}
+                    onChange={(e) => setNewDeadline(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    min={new Date().toISOString().slice(0, 16)}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Reason (Optional)
+                  </label>
+                  <textarea
+                    value={deadlineReason}
+                    onChange={(e) => setDeadlineReason(e.target.value)}
+                    placeholder="Why is this deadline being set/updated?"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                    rows={3}
+                  />
+                </div>
+
+                <div className="flex justify-end space-x-3 pt-4">
+                  <button
+                    onClick={() => setShowDeadlineModal(false)}
+                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSetDeadline}
+                    disabled={!newDeadline || submitting}
+                    className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 border border-transparent rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {submitting ? "Setting..." : "Set Deadline"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <Footer />
     </ProtectedRoute>
   );
 }
