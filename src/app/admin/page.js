@@ -213,9 +213,10 @@ export default function AdminDashboard() {
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case "high":
       case "urgent":
-        return "bg-red-100 text-red-800";
+        return "bg-red-200 text-red-900";
+      case "high":
+        return "bg-orange-200 text-orange-900";
       case "medium":
         return "bg-yellow-100 text-yellow-800";
       case "low":

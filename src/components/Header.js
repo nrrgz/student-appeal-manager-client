@@ -25,6 +25,7 @@ export default function Header() {
 
   const handleSignOut = () => {
     localStorage.removeItem("userInfo");
+    setUserInfo(null);
     if (logout) {
       logout();
     }
@@ -135,6 +136,9 @@ export default function Header() {
   };
 
   const isAuthenticated = user || userInfo;
+
+  console.log("userInfo", userInfo);
+  console.log("user", user);
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">

@@ -68,11 +68,7 @@ export default function AppealReview() {
           appealData.notes?.filter((note) => note.isInternal) || [],
         comments: appealData.notes?.filter((note) => !note.isInternal) || [],
         staffDocuments: appealData.staffDocuments || [],
-        academicHistory: {
-          previousGrades: appealData.student?.previousGrades || [],
-          attendance: appealData.student?.attendance || "N/A",
-          previousAppeals: appealData.student?.previousAppeals || 0,
-        },
+
         deadline: appealData.deadline,
         assignedReviewer: appealData.assignedReviewer
           ? `${appealData.assignedReviewer.firstName} ${appealData.assignedReviewer.lastName}`
@@ -318,34 +314,6 @@ export default function AppealReview() {
     }
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "Under Review":
-        return "bg-blue-100 text-blue-800";
-      case "Review Complete":
-        return "bg-green-100 text-green-800";
-      case "Awaiting Info":
-        return "bg-orange-100 text-orange-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case "High":
-        return "bg-red-100 text-red-800";
-      case "Medium":
-        return "bg-yellow-100 text-yellow-800";
-      case "Low":
-        return "bg-green-100 text-green-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
   if (!userInfo) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -377,6 +345,40 @@ export default function AppealReview() {
       </div>
     );
   }
+
+  const getStatusColor = (status) => {
+    switch (status?.toLowerCase()) {
+      case "submitted":
+        return "bg-yellow-100 text-yellow-800";
+      case "under review":
+        return "bg-blue-100 text-blue-800";
+      case "awaiting information":
+        return "bg-orange-100 text-orange-800";
+      case "decision made":
+        return "bg-purple-100 text-purple-800";
+      case "resolved":
+        return "bg-green-100 text-green-800";
+      case "rejected":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  const getPriorityColor = (priority) => {
+    switch (priority?.toLowerCase()) {
+      case "urgent":
+        return "bg-red-200 text-red-900";
+      case "high":
+        return "bg-orange-200 text-orange-900";
+      case "medium":
+        return "bg-yellow-100 text-yellow-800";
+      case "low":
+        return "bg-green-100 text-green-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
 
   return (
     <ProtectedRoute requiredRole="reviewer">
@@ -629,42 +631,6 @@ export default function AppealReview() {
                         No supporting evidence uploaded.
                       </p>
                     )}
-                  </div>
-                </div>
-
-                {/* Academic History */}
-                <div className="bg-white shadow rounded-lg p-6">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">
-                    Academic History
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-500">Previous Grades</p>
-                      <p className="text-sm font-medium text-gray-900">
-                        {Array.isArray(appeal.academicHistory.previousGrades)
-                          ? appeal.academicHistory.previousGrades.join(", ")
-                          : "No grades available"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Attendance</p>
-                      <p className="text-sm font-medium text-gray-900">
-                        {typeof appeal.academicHistory.attendance ===
-                          "string" ||
-                        typeof appeal.academicHistory.attendance === "number"
-                          ? appeal.academicHistory.attendance
-                          : "N/A"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-500">Previous Appeals</p>
-                      <p className="text-sm font-medium text-gray-900">
-                        {typeof appeal.academicHistory.previousAppeals ===
-                        "number"
-                          ? appeal.academicHistory.previousAppeals
-                          : "N/A"}
-                      </p>
-                    </div>
                   </div>
                 </div>
               </div>
