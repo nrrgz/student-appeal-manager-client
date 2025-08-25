@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "../contexts/AuthContext";
@@ -10,6 +10,31 @@ export default function Home() {
   const router = useRouter();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("overview");
+  const [pendingScroll, setPendingScroll] = useState(null);
+
+  // Function to handle footer navigation
+  const handleFooterNavigation = (section) => {
+    setActiveTab(section);
+    setPendingScroll(`${section}-section`);
+  };
+
+  // Effect to handle scrolling after tab change
+  useEffect(() => {
+    if (pendingScroll) {
+      const timer = setTimeout(() => {
+        const sectionElement = document.getElementById(pendingScroll);
+        if (sectionElement) {
+          sectionElement.scrollIntoView({
+            behavior: "smooth",
+            block: "start",
+          });
+        }
+        setPendingScroll(null);
+      }, 300); // Wait for tab to fully render
+
+      return () => clearTimeout(timer);
+    }
+  }, [activeTab, pendingScroll]);
 
   const handleGetStarted = () => {
     router.push("/login");
@@ -58,7 +83,10 @@ export default function Home() {
               </button>
             )}
             <button
-              onClick={() => setActiveTab("help")}
+              onClick={() => {
+                setActiveTab("help");
+                setPendingScroll("help-section");
+              }}
               className="border-2 border-purple-600 text-purple-600 hover:bg-purple-50 px-8 py-4 rounded-lg text-lg font-semibold transition-colors"
             >
               {isAuthenticated ? "Get Help" : "Learn More"}
@@ -73,7 +101,10 @@ export default function Home() {
           {/* Tab Navigation */}
           <div className="flex flex-wrap justify-center mb-12 border-b border-gray-200">
             <button
-              onClick={() => setActiveTab("overview")}
+              onClick={() => {
+                setActiveTab("overview");
+                setPendingScroll("overview-section");
+              }}
               className={`px-6 py-3 text-sm font-medium rounded-t-lg transition-colors ${
                 activeTab === "overview"
                   ? "text-purple-600 border-b-2 border-purple-600 bg-white"
@@ -83,7 +114,10 @@ export default function Home() {
               Overview
             </button>
             <button
-              onClick={() => setActiveTab("features")}
+              onClick={() => {
+                setActiveTab("features");
+                setPendingScroll("features-section");
+              }}
               className={`px-6 py-3 text-sm font-medium rounded-t-lg transition-colors ${
                 activeTab === "features"
                   ? "text-purple-600 border-b-2 border-purple-600 bg-white"
@@ -93,7 +127,10 @@ export default function Home() {
               Features
             </button>
             <button
-              onClick={() => setActiveTab("help")}
+              onClick={() => {
+                setActiveTab("help");
+                setPendingScroll("help-section");
+              }}
               className={`px-6 py-3 text-sm font-medium rounded-t-lg transition-colors ${
                 activeTab === "help"
                   ? "text-purple-600 border-b-2 border-purple-600 bg-white"
@@ -103,7 +140,10 @@ export default function Home() {
               Help & Support
             </button>
             <button
-              onClick={() => setActiveTab("contact")}
+              onClick={() => {
+                setActiveTab("contact");
+                setPendingScroll("contact-section");
+              }}
               className={`px-6 py-3 text-sm font-medium rounded-t-lg transition-colors ${
                 activeTab === "contact"
                   ? "text-purple-600 border-b-2 border-purple-600 bg-white"
@@ -118,7 +158,7 @@ export default function Home() {
           <div className="bg-white rounded-lg shadow-lg p-8">
             {/* Overview Tab */}
             {activeTab === "overview" && (
-              <div className="space-y-8">
+              <div id="overview-section" className="space-y-8">
                 <div className="text-center mb-8">
                   <h3 className="text-3xl font-bold text-gray-900 mb-4">
                     Welcome to Student Appeal Manager
@@ -213,7 +253,7 @@ export default function Home() {
 
             {/* Features Tab */}
             {activeTab === "features" && (
-              <div className="space-y-8">
+              <div id="features-section" className="space-y-8">
                 <h3 className="text-3xl font-bold text-gray-900 text-center mb-8">
                   Key Features
                 </h3>
@@ -585,11 +625,11 @@ export default function Home() {
               </div>
             )}
           </div>
-      </div>
+        </div>
       </section>
 
       {/* Footer */}
-      <Footer />
+      <Footer onNavigateToSection={handleFooterNavigation} />
     </div>
   );
 }

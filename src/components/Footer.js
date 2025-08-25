@@ -1,4 +1,4 @@
-export default function Footer() {
+export default function Footer({ onNavigateToSection }) {
   return (
     <footer className="bg-gray-800 text-white py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
@@ -26,17 +26,38 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="/#help" className="hover:text-white transition-colors">
-                  Help
-                </a>
+                {onNavigateToSection ? (
+                  <button
+                    onClick={() => onNavigateToSection("help")}
+                    className="hover:text-white transition-colors text-left w-full bg-transparent border-none p-0 text-gray-300 text-sm cursor-pointer"
+                  >
+                    Help
+                  </button>
+                ) : (
+                  <a
+                    href="/#help"
+                    className="hover:text-white transition-colors"
+                  >
+                    Help
+                  </a>
+                )}
               </li>
               <li>
-                <a
-                  href="/#contact"
-                  className="hover:text-white transition-colors"
-                >
-                  Contact
-                </a>
+                {onNavigateToSection ? (
+                  <button
+                    onClick={() => onNavigateToSection("contact")}
+                    className="hover:text-white transition-colors text-left w-full bg-transparent border-none p-0 text-gray-300 text-sm cursor-pointer"
+                  >
+                    Contact
+                  </button>
+                ) : (
+                  <a
+                    href="/#contact"
+                    className="hover:text-white transition-colors"
+                  >
+                    Contact
+                  </a>
+                )}
               </li>
             </ul>
           </div>
@@ -60,9 +81,21 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="/#faq" className="hover:text-white transition-colors">
-                  FAQ
-                </a>
+                {onNavigateToSection ? (
+                  <button
+                    onClick={() => onNavigateToSection("help")}
+                    className="hover:text-white transition-colors text-left w-full bg-transparent border-none p-0 text-gray-300 text-sm cursor-pointer"
+                  >
+                    FAQ
+                  </button>
+                ) : (
+                  <a
+                    href="/#help"
+                    className="hover:text-white transition-colors"
+                  >
+                    FAQ
+                  </a>
+                )}
               </li>
             </ul>
           </div>
