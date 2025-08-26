@@ -187,11 +187,13 @@ export default function ReviewerDashboard() {
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case "High":
-        return "bg-red-100 text-red-800";
-      case "Medium":
+      case "urgent":
+        return "bg-red-200 text-red-900";
+      case "high":
+        return "bg-orange-200 text-orange-900";
+      case "medium":
         return "bg-yellow-100 text-yellow-800";
-      case "Low":
+      case "low":
         return "bg-green-100 text-green-800";
       default:
         return "bg-gray-100 text-gray-800";
@@ -249,10 +251,10 @@ export default function ReviewerDashboard() {
               </div>
               <div className="bg-white shadow rounded-lg p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Pending Review
+                  Submitted
                 </h3>
                 <p className="text-3xl font-bold text-yellow-600">
-                  {getStatusCount("Pending")}
+                  {getStatusCount("submitted")}
                 </p>
               </div>
               <div className="bg-white shadow rounded-lg p-6">
@@ -260,7 +262,7 @@ export default function ReviewerDashboard() {
                   Under Review
                 </h3>
                 <p className="text-3xl font-bold text-blue-600">
-                  {getStatusCount("Under Review")}
+                  {getStatusCount("under review")}
                 </p>
               </div>
               <div className="bg-white shadow rounded-lg p-6">
@@ -268,7 +270,7 @@ export default function ReviewerDashboard() {
                   Completed
                 </h3>
                 <p className="text-3xl font-bold text-green-600">
-                  {getStatusCount("Review Complete")}
+                  {getStatusCount("decision made") + getStatusCount("resolved")}
                 </p>
               </div>
             </div>
@@ -313,7 +315,7 @@ export default function ReviewerDashboard() {
               <h3 className="text-lg font-medium text-gray-900 mb-4">
                 Filters
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Status
@@ -323,13 +325,17 @@ export default function ReviewerDashboard() {
                     onChange={(e) =>
                       handleFilterChange("status", e.target.value)
                     }
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900"
+                    className="w-full border border-gray-300 rounded-md px-4 py-3 text-base text-gray-900"
                   >
                     <option value="">All Statuses</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Under Review">Under Review</option>
-                    <option value="Awaiting Info">Awaiting Info</option>
-                    <option value="Review Complete">Review Complete</option>
+                    <option value="submitted">Submitted</option>
+                    <option value="under review">Under Review</option>
+                    <option value="awaiting information">
+                      Awaiting Information
+                    </option>
+                    <option value="decision made">Decision Made</option>
+                    <option value="resolved">Resolved</option>
+                    <option value="rejected">Rejected</option>
                   </select>
                 </div>
                 <div>
@@ -341,12 +347,13 @@ export default function ReviewerDashboard() {
                     onChange={(e) =>
                       handleFilterChange("priority", e.target.value)
                     }
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900"
+                    className="w-full border border-gray-300 rounded-md px-4 py-3 text-base text-gray-900"
                   >
                     <option value="">All Priorities</option>
-                    <option value="High">High</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Low">Low</option>
+                    <option value="urgent">Urgent</option>
+                    <option value="high">High</option>
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
                   </select>
                 </div>
                 <div>
@@ -358,7 +365,7 @@ export default function ReviewerDashboard() {
                     onChange={(e) =>
                       handleFilterChange("department", e.target.value)
                     }
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900"
+                    className="w-full border border-gray-300 rounded-md px-4 py-3 text-base text-gray-900"
                   >
                     <option value="">All Departments</option>
                     <option value="Computer Science">Computer Science</option>
@@ -375,24 +382,8 @@ export default function ReviewerDashboard() {
                     type="date"
                     value={filters.date}
                     onChange={(e) => handleFilterChange("date", e.target.value)}
-                    className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-gray-900"
+                    className="w-full border border-gray-300 rounded-md px-4 py-3 text-base text-gray-900"
                   />
-                </div>
-                <div className="flex items-end space-x-2">
-                  <button
-                    onClick={handleApplyFilters}
-                    disabled={loading}
-                    className="flex-1 bg-purple-600 text-white px-4 py-2 rounded-md text-sm hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {loading ? "Applying..." : "Apply Filters"}
-                  </button>
-                  <button
-                    onClick={clearFilters}
-                    disabled={loading}
-                    className="flex-1 bg-gray-600 text-white px-4 py-2 rounded-md text-sm hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Clear Filters
-                  </button>
                 </div>
               </div>
             </div>
@@ -439,7 +430,7 @@ export default function ReviewerDashboard() {
                     {loading ? (
                       <tr>
                         <td
-                          colSpan="5"
+                          colSpan="6"
                           className="px-6 py-4 text-center text-gray-500"
                         >
                           <div className="flex items-center justify-center">
@@ -451,7 +442,7 @@ export default function ReviewerDashboard() {
                     ) : filteredAppeals.length === 0 ? (
                       <tr>
                         <td
-                          colSpan="5"
+                          colSpan="6"
                           className="px-6 py-4 text-center text-gray-500"
                         >
                           No appeals found matching the current filters.
@@ -474,9 +465,6 @@ export default function ReviewerDashboard() {
                             <div className="text-sm text-gray-900">
                               {appeal.department}
                             </div>
-                            <div className="text-sm text-gray-500">
-                              {appeal.course}
-                            </div>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap">
                             <span
@@ -497,7 +485,9 @@ export default function ReviewerDashboard() {
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                            {new Date(appeal.deadline).toLocaleDateString()}
+                            {appeal.deadline
+                              ? new Date(appeal.deadline).toLocaleDateString()
+                              : "No deadline"}
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <button

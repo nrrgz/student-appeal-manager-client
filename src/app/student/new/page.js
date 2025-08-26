@@ -20,6 +20,7 @@ export default function NewAppeal() {
     studentId: "",
     email: "",
     phone: "",
+    course: "", // Added course field
     department: "", // Added department field
 
     hasAdviser: false,
@@ -281,6 +282,7 @@ export default function NewAppeal() {
     if (!formData.lastName.trim()) errors.push("Last name is required");
     if (!formData.studentId.trim()) errors.push("Student ID is required");
     if (!formData.email.trim()) errors.push("Email is required");
+    if (!formData.course.trim()) errors.push("Course is required");
     if (!formData.department.trim())
       errors.push("Department selection is required");
     if (!formData.appealType) errors.push("Appeal type is required");
@@ -332,6 +334,7 @@ export default function NewAppeal() {
       formDataToSend.append("studentId", formData.studentId);
       formDataToSend.append("email", formData.email);
       formDataToSend.append("phone", formData.phone || "");
+      formDataToSend.append("course", formData.course);
       formDataToSend.append("department", formData.department);
       formDataToSend.append("hasAdviser", formData.hasAdviser);
       formDataToSend.append(
@@ -456,7 +459,7 @@ export default function NewAppeal() {
       case 2:
         return (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   First Name *
@@ -528,6 +531,20 @@ export default function NewAppeal() {
                   value={formData.phone}
                   onChange={(e) => handleInputChange("phone", e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Course *
+                </label>
+                <input
+                  type="text"
+                  value={formData.course}
+                  onChange={(e) => handleInputChange("course", e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900"
+                  placeholder="e.g., Computer Science, Medicine, Law"
+                  required
                 />
               </div>
             </div>
@@ -964,6 +981,9 @@ export default function NewAppeal() {
                 <p className="text-sm text-gray-600">
                   <strong>Department:</strong>{" "}
                   {formData.department || "Not selected"}
+                </p>
+                <p className="text-sm text-gray-600">
+                  <strong>Course:</strong> {formData.course || "Not specified"}
                 </p>
               </div>
 

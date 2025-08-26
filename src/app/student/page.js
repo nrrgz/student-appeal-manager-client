@@ -59,20 +59,17 @@ export default function StudentDashboard() {
   const getStatusColor = (status) => {
     switch (status) {
       case "submitted":
-      case "Submitted":
         return "bg-yellow-100 text-yellow-800";
       case "under review":
-      case "Under Review":
-      case "In Review":
         return "bg-blue-100 text-blue-800";
       case "awaiting information":
-      case "Awaiting Info":
         return "bg-orange-100 text-orange-800";
-      case "resolved":
       case "decision made":
-      case "Review Complete":
-      case "Resolved":
         return "bg-green-100 text-green-800";
+      case "resolved":
+        return "bg-green-100 text-green-800";
+      case "rejected":
+        return "bg-red-100 text-red-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -143,37 +140,53 @@ export default function StudentDashboard() {
               </div>
               <div className="bg-white shadow rounded-lg p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Pending
+                  Submitted
                 </h3>
                 <p className="text-3xl font-bold text-yellow-600">
+                  {appeals.filter((a) => a.status === "submitted").length}
+                </p>
+              </div>
+              <div className="bg-white shadow rounded-lg p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Under Review
+                </h3>
+                <p className="text-3xl font-bold text-blue-600">
+                  {appeals.filter((a) => a.status === "under review").length}
+                </p>
+              </div>
+              <div className="bg-white shadow rounded-lg p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Awaiting Info
+                </h3>
+                <p className="text-3xl font-bold text-orange-600">
                   {
-                    appeals.filter(
-                      (a) =>
-                        a.status === "Submitted" || a.status === "Under Review"
-                    ).length
+                    appeals.filter((a) => a.status === "awaiting information")
+                      .length
                   }
                 </p>
               </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div className="bg-white shadow rounded-lg p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  In Review
-                </h3>
-                <p className="text-3xl font-bold text-blue-600">
-                  {appeals.filter((a) => a.status === "In Review").length}
-                </p>
-              </div>
-              <div className="bg-white shadow rounded-lg p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  Resolved
+                  Completed
                 </h3>
                 <p className="text-3xl font-bold text-green-600">
                   {
                     appeals.filter(
                       (a) =>
-                        a.status === "Resolved" ||
-                        a.status === "Review Complete"
+                        a.status === "decision made" || a.status === "resolved"
                     ).length
                   }
+                </p>
+              </div>
+              <div className="bg-white shadow rounded-lg p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Rejected
+                </h3>
+                <p className="text-3xl font-bold text-red-600">
+                  {appeals.filter((a) => a.status === "rejected").length}
                 </p>
               </div>
             </div>

@@ -63,13 +63,17 @@ export default function AdminDashboard() {
       ]);
 
       // Process appeals data
+      console.log("Raw appeal data:", appealsResponse.appeals[0]); // Debug: Log first appeal
       const formattedAppeals = appealsResponse.appeals.map((appeal) => ({
         id: appeal._id,
         studentName: appeal.student
           ? `${appeal.student.firstName} ${appeal.student.lastName}`
           : "Unknown Student",
         studentId: appeal.student?.studentId || "",
-        department: appeal.student?.department || "",
+        department:
+          appeal.department ||
+          appeal.student?.department ||
+          "Unknown Department",
         status: appeal.status || "Pending",
         grounds: appeal.appealType || "",
         submissionDate: appeal.createdAt,
@@ -80,6 +84,7 @@ export default function AdminDashboard() {
           : "Unassigned",
       }));
 
+      console.log("Formatted appeals:", formattedAppeals[0]); // Debug: Log first formatted appeal
       setAppeals(formattedAppeals);
       setFilteredAppeals(formattedAppeals);
 
@@ -126,9 +131,18 @@ export default function AdminDashboard() {
     }
 
     if (newFilters.status) {
-      filtered = filtered.filter(
-        (appeal) => appeal.status === newFilters.status
-      );
+      console.log("Filtering by status:", newFilters.status); // Debug
+      filtered = filtered.filter((appeal) => {
+        console.log(
+          "Appeal status:",
+          appeal.status,
+          "Filter status:",
+          newFilters.status,
+          "Match:",
+          appeal.status === newFilters.status
+        ); // Debug
+        return appeal.status === newFilters.status;
+      });
     }
 
     if (newFilters.grounds) {
@@ -563,9 +577,12 @@ export default function AdminDashboard() {
                     <option value="">All Statuses</option>
                     <option value="submitted">Submitted</option>
                     <option value="under review">Under Review</option>
-                    <option value="awaiting information">Awaiting Info</option>
+                    <option value="awaiting information">
+                      Awaiting Information
+                    </option>
                     <option value="decision made">Decision Made</option>
                     <option value="resolved">Resolved</option>
+                    <option value="rejected">Rejected</option>
                   </select>
                 </div>
 

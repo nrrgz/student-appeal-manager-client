@@ -16,8 +16,7 @@ export default function AppealManagement() {
   const [newNote, setNewNote] = useState("");
   const [newComment, setNewComment] = useState("");
   const [newStatus, setNewStatus] = useState("");
-  const [showUploadForm, setShowUploadForm] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState(null);
+
   const [userInfo, setUserInfo] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [showDeadlineModal, setShowDeadlineModal] = useState(false);
@@ -182,42 +181,6 @@ export default function AppealManagement() {
     } catch (error) {
       console.error("Failed to update status:", error);
       setError("Failed to update status. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const handleFileUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      setUploadedFile(file);
-    }
-  };
-
-  const handleUploadDocument = async () => {
-    if (!uploadedFile || submitting) return;
-
-    try {
-      setSubmitting(true);
-      // For now, we'll just add it to the local state
-      // In a real implementation, you'd upload to the server
-      const document = {
-        name: uploadedFile.name,
-        type: "Staff Document",
-        uploadedAt: new Date().toLocaleString(),
-        admin: userInfo?.firstName || "Admin",
-      };
-
-      setAppeal((prev) => ({
-        ...prev,
-        staffDocuments: [...prev.staffDocuments, document],
-      }));
-
-      setUploadedFile(null);
-      setShowUploadForm(false);
-    } catch (error) {
-      console.error("Failed to upload document:", error);
-      setError("Failed to upload document. Please try again.");
     } finally {
       setSubmitting(false);
     }
@@ -894,72 +857,6 @@ export default function AppealManagement() {
                   >
                     {submitting ? "Adding..." : "Add Note"}
                   </button>
-                </div>
-              </div>
-
-              {/* Staff Documents */}
-              <div className="bg-white rounded-lg shadow p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-medium text-gray-900">
-                    Staff Documents
-                  </h3>
-                  <button
-                    onClick={() => setShowUploadForm(!showUploadForm)}
-                    className="text-indigo-600 hover:text-indigo-900 text-sm font-medium"
-                  >
-                    {showUploadForm ? "Cancel" : "Upload"}
-                  </button>
-                </div>
-
-                {showUploadForm && (
-                  <div className="mb-4 p-4 bg-gray-50 rounded-md">
-                    <input
-                      type="file"
-                      onChange={handleFileUpload}
-                      className="w-full mb-2"
-                      disabled={submitting}
-                    />
-                    {uploadedFile && (
-                      <button
-                        onClick={handleUploadDocument}
-                        disabled={submitting}
-                        className="bg-indigo-600 text-white px-3 py-1 rounded text-sm hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {submitting ? "Uploading..." : "Upload"}
-                      </button>
-                    )}
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  {Array.isArray(appeal.staffDocuments) &&
-                  appeal.staffDocuments.length > 0 ? (
-                    appeal.staffDocuments.map((doc, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-2 bg-gray-50 rounded-md"
-                      >
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">
-                            {doc.name}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {doc.admin} • {formatDate(doc.uploadedAt)}
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => handleDownload(doc)}
-                          className="text-indigo-600 hover:text-indigo-900 text-sm font-medium hover:bg-indigo-50 px-3 py-1 rounded-md transition-colors"
-                        >
-                          Download
-                        </button>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-gray-500 text-sm">
-                      No staff documents uploaded.
-                    </p>
-                  )}
                 </div>
               </div>
             </div>

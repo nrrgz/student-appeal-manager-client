@@ -55,18 +55,18 @@ export default function AppealDetail() {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case "Submitted":
+      case "submitted":
+        return "bg-yellow-100 text-yellow-800";
+      case "under review":
         return "bg-blue-100 text-blue-800";
-      case "Under Initial Review":
-        return "bg-yellow-100 text-yellow-800";
-      case "In Review":
-        return "bg-yellow-100 text-yellow-800";
-      case "Additional Information Requested":
+      case "awaiting information":
         return "bg-orange-100 text-orange-800";
-      case "Review Complete":
+      case "decision made":
         return "bg-green-100 text-green-800";
-      case "Resolved":
+      case "resolved":
         return "bg-green-100 text-green-800";
+      case "rejected":
+        return "bg-red-100 text-red-800";
       default:
         return "bg-gray-100 text-gray-800";
     }
@@ -429,10 +429,11 @@ export default function AppealDetail() {
                                     event.action
                                   )
                                     .replace("text-", "bg-")
-                                    .replace("bg-blue-100", "bg-blue-500")
                                     .replace("bg-yellow-100", "bg-yellow-500")
+                                    .replace("bg-blue-100", "bg-blue-500")
                                     .replace("bg-orange-100", "bg-orange-500")
-                                    .replace("bg-green-100", "bg-green-500")}`}
+                                    .replace("bg-green-100", "bg-green-500")
+                                    .replace("bg-red-100", "bg-red-500")}`}
                                 >
                                   <svg
                                     className="h-4 w-4 text-white"
@@ -690,7 +691,9 @@ export default function AppealDetail() {
                     </h4>
                     <div className="space-y-2 text-sm">
                       <a
-                        href="#"
+                        href="https://sheffield.ac.uk/study/policies/appeals-complaints-current-students/academic"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="flex items-center text-blue-600 hover:text-blue-800 hover:underline"
                       >
                         <svg
@@ -709,7 +712,9 @@ export default function AppealDetail() {
                         Appeals Policy & Procedures
                       </a>
                       <a
-                        href="#"
+                        href="https://sheffield.ac.uk/study/support"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="flex items-center text-blue-600 hover:text-blue-800 hover:underline"
                       >
                         <svg
@@ -728,7 +733,9 @@ export default function AppealDetail() {
                         Student Support Services
                       </a>
                       <a
-                        href="#"
+                        href="https://sheffield.ac.uk/registration/contact"
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="flex items-center text-blue-600 hover:text-blue-800 hover:underline"
                       >
                         <svg

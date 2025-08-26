@@ -35,11 +35,9 @@ export default function Header() {
   const handleHelp = () => {
     // Navigate to help section on main page or show help modal
     if (pathname === "/") {
-      // If on main page, scroll to help section
-      const helpSection = document.getElementById("help-section");
-      if (helpSection) {
-        helpSection.scrollIntoView({ behavior: "smooth" });
-      }
+      // If on main page, dispatch custom event for smooth scrolling
+      const event = new CustomEvent("navigateToSection", { detail: "help" });
+      window.dispatchEvent(event);
     } else {
       // If on other pages, go to main page help section
       router.push("/#help-section");
@@ -49,11 +47,9 @@ export default function Header() {
   const handleContact = () => {
     // Navigate to contact section on main page or show contact modal
     if (pathname === "/") {
-      // If on main page, scroll to contact section
-      const contactSection = document.getElementById("contact-section");
-      if (contactSection) {
-        contactSection.scrollIntoView({ behavior: "smooth" });
-      }
+      // If on main page, dispatch custom event for smooth scrolling
+      const event = new CustomEvent("navigateToSection", { detail: "contact" });
+      window.dispatchEvent(event);
     } else {
       // If on other pages, go to main page contact section
       router.push("/#contact-section");

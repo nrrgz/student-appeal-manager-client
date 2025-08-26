@@ -36,6 +36,21 @@ export default function Home() {
     }
   }, [activeTab, pendingScroll]);
 
+  // Effect to listen for header navigation events
+  useEffect(() => {
+    const handleHeaderNavigation = (event) => {
+      const section = event.detail;
+      setActiveTab(section);
+      setPendingScroll(`${section}-section`);
+    };
+
+    window.addEventListener("navigateToSection", handleHeaderNavigation);
+
+    return () => {
+      window.removeEventListener("navigateToSection", handleHeaderNavigation);
+    };
+  }, []);
+
   const handleGetStarted = () => {
     router.push("/login");
   };

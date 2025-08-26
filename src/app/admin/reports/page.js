@@ -172,7 +172,7 @@ export default function StatisticsDashboard() {
             </div>
             <div className="flex items-center space-x-4">
               <select
-                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
                 value={dateRange}
                 onChange={(e) => handleDateRangeChange(e.target.value)}
               >
@@ -186,15 +186,6 @@ export default function StatisticsDashboard() {
                 className="bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700"
               >
                 Download CSV
-              </button>
-              <button
-                onClick={() => {
-                  localStorage.removeItem("userInfo");
-                  window.location.href = "/";
-                }}
-                className="bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700"
-              >
-                Logout
               </button>
             </div>
           </div>

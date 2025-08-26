@@ -56,7 +56,8 @@ export default function AppealReview() {
           : "Unknown Student",
         studentId: appealData.student?.studentId || "N/A",
         studentEmail: appealData.student?.email || "N/A",
-        department: appealData.student?.department || "N/A",
+        department:
+          appealData.department || appealData.student?.department || "N/A",
         course: appealData.course || "N/A",
         status: appealData.status || "Pending",
         grounds: appealData.appealType || "N/A",
