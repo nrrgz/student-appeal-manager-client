@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import ProtectedRoute from "../../components/ProtectedRoute";
-import Footer from "../../components/Footer";
-import apiService from "../../services/api";
+import ProtectedRoute from "../../../components/ProtectedRoute";
+import Footer from "../../../components/Footer";
+import apiService from "../../../services/api";
 
 export default function LateSubmissionInfo() {
   const [userInfo, setUserInfo] = useState(null);
@@ -224,7 +224,7 @@ export default function LateSubmissionInfo() {
             <div className="border-t border-gray-200 pt-6">
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <a
-                  href="https://www.sheffield.ac.uk/student-services/appeals/late-submission-request"
+                  href="https://shef.qualtrics.com/jfe/form/SV_eyUtT0CepceIShw"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-purple-600 hover:bg-purple-700 transition-colors"
