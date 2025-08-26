@@ -71,7 +71,6 @@ export default function ReviewerDashboard() {
     } catch (error) {
       console.error("Failed to fetch appeals:", error);
       setError("Failed to load appeals. Please try again.");
-      // Fallback to empty array if API fails
       setAppeals([]);
       setFilteredAppeals([]);
     } finally {
@@ -159,7 +158,7 @@ export default function ReviewerDashboard() {
       department: "",
       date: "",
     });
-    fetchAppeals(); // Refresh data with no filters
+    fetchAppeals();
   };
 
   const getStatusColor = (status) => {

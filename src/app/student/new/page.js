@@ -20,8 +20,8 @@ export default function NewAppeal() {
     studentId: "",
     email: "",
     phone: "",
-    course: "", // Added course field
-    department: "", // Added department field
+    course: "",
+    department: "",
 
     hasAdviser: false,
     adviserName: "",
@@ -34,7 +34,7 @@ export default function NewAppeal() {
 
     statement: "",
 
-    evidence: [], // Initialize as empty array
+    evidence: [],
 
     confirmAll: false,
 
@@ -45,14 +45,12 @@ export default function NewAppeal() {
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadError, setUploadError] = useState(null);
 
-  // Ensure evidence is always an array
   useEffect(() => {
     if (!Array.isArray(formData.evidence)) {
       setFormData((prev) => ({ ...prev, evidence: [] }));
     }
   }, [formData.evidence]);
 
-  // Debug: Log state changes
   useEffect(() => {
     console.log("Uploaded files state changed:", uploadedFiles);
     console.log("Form data evidence changed:", formData.evidence);
@@ -60,7 +58,6 @@ export default function NewAppeal() {
 
   const router = useRouter();
 
-  // Check authentication
   useEffect(() => {
     const storedUserInfo = localStorage.getItem("userInfo");
     if (!storedUserInfo) {
@@ -76,18 +73,16 @@ export default function NewAppeal() {
 
     setUserInfo(user);
 
-    // Auto-populate form with user's registered information
     setFormData((prev) => ({
       ...prev,
       firstName: user.firstName || "",
       lastName: user.lastName || "",
       studentId: user.studentId || "",
       email: user.email || "",
-      department: user.department || "", // Auto-populate department from user info
+      department: user.department || "",
     }));
   }, [router]);
 
-  // Cleanup file preview URLs on unmount
   useEffect(() => {
     return () => {
       uploadedFiles.forEach((file) => {
@@ -127,7 +122,7 @@ export default function NewAppeal() {
   };
 
   const validateFile = (file) => {
-    const maxSize = 10 * 1024 * 1024; // 10MB
+    const maxSize = 10 * 1024 * 1024;
     const allowedTypes = [
       "application/pdf",
       "application/msword",
@@ -187,7 +182,6 @@ export default function NewAppeal() {
     if (newFiles.length > 0) {
       console.log("Adding new files:", newFiles);
       setUploadedFiles((prev) => [...prev, ...newFiles]);
-      // Update form data with file information
       const fileInfo = newFiles.map((f) => ({
         name: f.name,
         size: f.size,
@@ -211,7 +205,6 @@ export default function NewAppeal() {
       const fileToRemove = prev.find((f) => f.id === fileId);
       if (fileToRemove) {
         console.log("File to remove:", fileToRemove);
-        // Remove from form data
         setFormData((prevForm) => {
           const newEvidence = prevForm.evidence.filter(
             (f) => f.name !== fileToRemove.name
@@ -222,7 +215,6 @@ export default function NewAppeal() {
             evidence: newEvidence,
           };
         });
-        // Clean up preview URL if it exists
         if (fileToRemove.preview) {
           URL.revokeObjectURL(fileToRemove.preview);
         }
@@ -301,7 +293,6 @@ export default function NewAppeal() {
       return;
     }
 
-    // Debug: Check if user has token
     console.log("User info:", userInfo);
     console.log(
       "Auth token from localStorage:",
@@ -312,7 +303,6 @@ export default function NewAppeal() {
       sessionStorage.getItem("authToken")
     );
 
-    // Validate form
     const validationErrors = validateForm();
     if (validationErrors.length > 0) {
       setError(validationErrors.join(", "));
@@ -323,10 +313,8 @@ export default function NewAppeal() {
       setLoading(true);
       setError(null);
 
-      // Create FormData for file upload
       const formDataToSend = new FormData();
 
-      // Add all the form fields
       formDataToSend.append("declaration", formData.declaration);
       formDataToSend.append("deadlineCheck", formData.deadlineCheck);
       formDataToSend.append("firstName", formData.firstName);
@@ -350,7 +338,6 @@ export default function NewAppeal() {
         formData.hasAdviser ? formData.adviserPhone : ""
       );
       formDataToSend.append("appealType", formData.appealType);
-      // Add grounds as individual array items
       formData.grounds.forEach((ground) => {
         formDataToSend.append("grounds", ground);
       });
@@ -363,7 +350,6 @@ export default function NewAppeal() {
       formDataToSend.append("semester", "1");
       formDataToSend.append("confirmAll", formData.confirmAll);
 
-      // Add the actual files
       uploadedFiles.forEach((fileObj) => {
         console.log("Appending file to FormData:", fileObj);
         console.log("File object:", fileObj.file);
@@ -387,15 +373,12 @@ export default function NewAppeal() {
       console.log("Uploaded files state:", uploadedFiles);
       console.log("Uploaded files length:", uploadedFiles.length);
 
-      // Submit appeal to API with FormData
       const response = await apiService.createAppeal(formDataToSend);
 
       console.log("Appeal submitted successfully:", response);
 
-      // Mark as submitted and show success
       handleInputChange("submitted", true);
 
-      // Redirect to dashboard after 3 seconds
       setTimeout(() => {
         router.push("/student");
       }, 3000);

@@ -20,7 +20,6 @@ export default function StudentDashboard() {
     }
   }, []);
 
-  // Fetch appeals from API
   useEffect(() => {
     const fetchAppeals = async () => {
       if (!userInfo) return;
@@ -33,7 +32,6 @@ export default function StudentDashboard() {
       } catch (error) {
         console.error("Failed to fetch appeals:", error);
         setError("Failed to load appeals. Please try again later.");
-        // Fallback to empty array
         setAppeals([]);
       } finally {
         setLoading(false);

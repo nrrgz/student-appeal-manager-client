@@ -27,7 +27,6 @@ export default function AppealManagement() {
   const [selectedReviewer, setSelectedReviewer] = useState("");
   const [selectedPriority, setSelectedPriority] = useState("");
 
-  // Check authentication
   useEffect(() => {
     const storedUserInfo = localStorage.getItem("userInfo");
     if (!storedUserInfo) {
@@ -44,14 +43,12 @@ export default function AppealManagement() {
     setUserInfo(user);
   }, []);
 
-  // Fetch appeal data
   useEffect(() => {
     if (appealId) {
       fetchAppeal();
     }
   }, [appealId]);
 
-  // Fetch available reviewers
   useEffect(() => {
     fetchAvailableReviewers();
   }, []);
@@ -64,7 +61,6 @@ export default function AppealManagement() {
       setAppeal(response.appeal);
       setNewStatus(response.appeal.status);
 
-      // Initialize assignment values
       if (response.appeal.assignedReviewer) {
         setSelectedReviewer(response.appeal.assignedReviewer._id);
       }
@@ -98,7 +94,6 @@ export default function AppealManagement() {
         isInternal: true,
       });
 
-      // Refresh appeal data to get the new note
       await fetchAppeal();
       setNewNote("");
     } catch (error) {
@@ -119,7 +114,6 @@ export default function AppealManagement() {
         isInternal: false,
       });
 
-      // Refresh appeal data to get the new comment
       await fetchAppeal();
       setNewComment("");
     } catch (error) {
@@ -138,7 +132,6 @@ export default function AppealManagement() {
       setSubmitting(true);
       await apiService.deleteAdminNote(appealId, noteId);
 
-      // Refresh appeal data to get the updated notes
       await fetchAppeal();
     } catch (error) {
       console.error("Failed to delete note:", error);
@@ -156,7 +149,6 @@ export default function AppealManagement() {
       setSubmitting(true);
       await apiService.deleteAdminNote(appealId, commentId);
 
-      // Refresh appeal data to get the updated comments
       await fetchAppeal();
     } catch (error) {
       console.error("Failed to delete comment:", error);
@@ -176,7 +168,6 @@ export default function AppealManagement() {
         reason: `Status updated by admin: ${userInfo?.firstName || "Admin"}`,
       });
 
-      // Refresh appeal data to get the updated status
       await fetchAppeal();
     } catch (error) {
       console.error("Failed to update status:", error);
@@ -248,7 +239,6 @@ export default function AppealManagement() {
         reason: deadlineReason,
       });
 
-      // Refresh appeal data to get the updated deadline
       await fetchAppeal();
       setShowDeadlineModal(false);
       setNewDeadline("");
@@ -268,7 +258,6 @@ export default function AppealManagement() {
       setSubmitting(true);
       const assignmentData = {};
 
-      // Handle reviewer assignment (empty string means unassign)
       if (selectedReviewer !== undefined) {
         assignmentData.assignedReviewer = selectedReviewer || null;
       }
@@ -278,7 +267,6 @@ export default function AppealManagement() {
 
       await apiService.updateAppealAssignment(appealId, assignmentData);
 
-      // Refresh appeal data
       await fetchAppeal();
       setShowAssignmentModal(false);
       setSelectedReviewer("");
@@ -293,7 +281,6 @@ export default function AppealManagement() {
 
   const handleDownload = async (file) => {
     try {
-      // Debug: Log the file object to see what's available
       console.log("File object for download:", file);
       console.log("File properties:", {
         originalName: file.originalName,
@@ -302,13 +289,11 @@ export default function AppealManagement() {
         path: file.path,
       });
 
-      // Get the appeal ID from the current appeal
       if (!appeal || !appeal._id) {
         alert("Appeal information not available");
         return;
       }
 
-      // Get the filename to download
       const filename = file.originalName || file.filename || file.name;
       if (!filename) {
         alert("File name not available");
@@ -317,30 +302,25 @@ export default function AppealManagement() {
 
       console.log("Using filename for download:", filename);
 
-      // Create the download URL
       const downloadUrl = `${
         process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
       }/api/admin/appeals/${appeal._id}/evidence/${encodeURIComponent(
         filename
       )}/download`;
 
-      // Get the auth token
       const token = localStorage.getItem("token");
       if (!token) {
         alert("Authentication required. Please log in again.");
         return;
       }
 
-      // Create a temporary link element and trigger download
       const link = document.createElement("a");
       link.href = downloadUrl;
       link.download =
         file.originalName || file.filename || file.name || "download";
 
-      // Add authorization header
       link.setAttribute("data-token", token);
 
-      // For cross-origin requests, we need to fetch the file first
       const response = await fetch(downloadUrl, {
         method: "GET",
         headers: {
@@ -354,18 +334,14 @@ export default function AppealManagement() {
         );
       }
 
-      // Get the file blob
       const blob = await response.blob();
 
-      // Create a blob URL and trigger download
       const blobUrl = window.URL.createObjectURL(blob);
       link.href = blobUrl;
 
-      // Trigger download
       document.body.appendChild(link);
       link.click();
 
-      // Cleanup
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
@@ -766,7 +742,6 @@ export default function AppealManagement() {
                   </div>
                   <button
                     onClick={() => {
-                      // Initialize form with current values
                       if (appeal?.assignedReviewer) {
                         setSelectedReviewer(appeal.assignedReviewer._id);
                       } else {
@@ -954,7 +929,6 @@ export default function AppealManagement() {
                 <button
                   onClick={() => {
                     setShowAssignmentModal(false);
-                    // Reset form to current values
                     if (appeal?.assignedReviewer) {
                       setSelectedReviewer(appeal.assignedReviewer._id);
                     } else {
@@ -1026,7 +1000,6 @@ export default function AppealManagement() {
                   <button
                     onClick={() => {
                       setShowAssignmentModal(false);
-                      // Reset form to current values
                       if (appeal?.assignedReviewer) {
                         setSelectedReviewer(appeal.assignedReviewer._id);
                       } else {

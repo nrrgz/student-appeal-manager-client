@@ -30,7 +30,6 @@ export default function AppealDetail() {
     setUserInfo(user);
   }, [router]);
 
-  // Fetch appeal from API
   useEffect(() => {
     const fetchAppeal = async () => {
       if (!userInfo || !params.id) return;
@@ -94,7 +93,6 @@ export default function AppealDetail() {
 
   const handleDownload = async (file) => {
     try {
-      // Debug: Log the file object to see what's available
       console.log("File object for download:", file);
       console.log("File properties:", {
         originalName: file.originalName,
@@ -103,13 +101,11 @@ export default function AppealDetail() {
         path: file.path,
       });
 
-      // Get the appeal ID from the current appeal
       if (!appeal || !appeal._id) {
         alert("Appeal information not available");
         return;
       }
 
-      // Get the filename to download
       const filename = file.originalName || file.filename || file.name;
       if (!filename) {
         alert("File name not available");
@@ -118,30 +114,25 @@ export default function AppealDetail() {
 
       console.log("Using filename for download:", filename);
 
-      // Create the download URL
       const downloadUrl = `${
         process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
       }/api/appeals/${appeal._id}/evidence/${encodeURIComponent(
         filename
       )}/download`;
 
-      // Get the auth token
       const token = localStorage.getItem("token");
       if (!token) {
         alert("Authentication required. Please log in again.");
         return;
       }
 
-      // Create a temporary link element and trigger download
       const link = document.createElement("a");
       link.href = downloadUrl;
       link.download =
         file.originalName || file.filename || file.name || "download";
 
-      // Add authorization header
       link.setAttribute("data-token", token);
 
-      // For cross-origin requests, we need to fetch the file first
       const response = await fetch(downloadUrl, {
         method: "GET",
         headers: {
@@ -155,18 +146,14 @@ export default function AppealDetail() {
         );
       }
 
-      // Get the file blob
       const blob = await response.blob();
 
-      // Create a blob URL and trigger download
       const blobUrl = window.URL.createObjectURL(blob);
       link.href = blobUrl;
 
-      // Trigger download
       document.body.appendChild(link);
       link.click();
 
-      // Cleanup
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
     } catch (error) {

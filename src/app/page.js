@@ -12,13 +12,11 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState("overview");
   const [pendingScroll, setPendingScroll] = useState(null);
 
-  // Function to handle footer navigation
   const handleFooterNavigation = (section) => {
     setActiveTab(section);
     setPendingScroll(`${section}-section`);
   };
 
-  // Effect to handle scrolling after tab change
   useEffect(() => {
     if (pendingScroll) {
       const timer = setTimeout(() => {
@@ -30,13 +28,12 @@ export default function Home() {
           });
         }
         setPendingScroll(null);
-      }, 300); // Wait for tab to fully render
+      }, 300);
 
       return () => clearTimeout(timer);
     }
   }, [activeTab, pendingScroll]);
 
-  // Effect to listen for header navigation events
   useEffect(() => {
     const handleHeaderNavigation = (event) => {
       const section = event.detail;

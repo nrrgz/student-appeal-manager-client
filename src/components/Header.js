@@ -12,7 +12,6 @@ export default function Header() {
   const [userInfo, setUserInfo] = useState(null);
 
   useEffect(() => {
-    // Get user info from localStorage for backward compatibility
     const storedUserInfo = localStorage.getItem("userInfo");
     if (storedUserInfo) {
       setUserInfo(JSON.parse(storedUserInfo));
@@ -33,25 +32,19 @@ export default function Header() {
   };
 
   const handleHelp = () => {
-    // Navigate to help section on main page or show help modal
     if (pathname === "/") {
-      // If on main page, dispatch custom event for smooth scrolling
       const event = new CustomEvent("navigateToSection", { detail: "help" });
       window.dispatchEvent(event);
     } else {
-      // If on other pages, go to main page help section
       router.push("/#help-section");
     }
   };
 
   const handleContact = () => {
-    // Navigate to contact section on main page or show contact modal
     if (pathname === "/") {
-      // If on main page, dispatch custom event for smooth scrolling
       const event = new CustomEvent("navigateToSection", { detail: "contact" });
       window.dispatchEvent(event);
     } else {
-      // If on other pages, go to main page contact section
       router.push("/#contact-section");
     }
   };
@@ -91,7 +84,6 @@ export default function Header() {
   const getDashboardButton = () => {
     if (!isAuthenticated) return null;
 
-    // If user is on main page or other pages, show dashboard button
     if (
       pathname === "/" ||
       (!pathname.startsWith("/student") &&
@@ -132,9 +124,6 @@ export default function Header() {
   };
 
   const isAuthenticated = user || userInfo;
-
-  console.log("userInfo", userInfo);
-  console.log("user", user);
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200">

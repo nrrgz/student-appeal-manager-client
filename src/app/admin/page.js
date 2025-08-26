@@ -27,7 +27,6 @@ export default function AdminDashboard() {
   const [error, setError] = useState(null);
   const [userInfo, setUserInfo] = useState(null);
 
-  // Check authentication
   useEffect(() => {
     const storedUserInfo = localStorage.getItem("userInfo");
     if (!storedUserInfo) {
@@ -44,7 +43,6 @@ export default function AdminDashboard() {
     setUserInfo(user);
   }, []);
 
-  // Fetch appeals and dashboard data
   useEffect(() => {
     if (userInfo) {
       fetchData();
@@ -56,14 +54,12 @@ export default function AdminDashboard() {
       setLoading(true);
       setError(null);
 
-      // Fetch appeals and dashboard data in parallel
       const [appealsResponse, dashboardResponse] = await Promise.all([
         apiService.getAdminAppeals(),
         apiService.getAdminDashboard(),
       ]);
 
-      // Process appeals data
-      console.log("Raw appeal data:", appealsResponse.appeals[0]); // Debug: Log first appeal
+      console.log("Raw appeal data:", appealsResponse.appeals[0]);
       const formattedAppeals = appealsResponse.appeals.map((appeal) => ({
         id: appeal._id,
         studentName: appeal.student
@@ -84,23 +80,21 @@ export default function AdminDashboard() {
           : "Unassigned",
       }));
 
-      console.log("Formatted appeals:", formattedAppeals[0]); // Debug: Log first formatted appeal
+      console.log("Formatted appeals:", formattedAppeals[0]);
       setAppeals(formattedAppeals);
       setFilteredAppeals(formattedAppeals);
 
-      // Process dashboard statistics
       const stats = dashboardResponse.statusSummary;
       setDashboardStats({
         total: dashboardResponse.total || 0,
         pending: stats.submitted || 0,
         resolved: (stats.resolved || 0) + (stats["decision made"] || 0),
-        highPriority: 0, // Will be calculated from appeals data
+        highPriority: 0,
         overdue: dashboardResponse.deadlineSummary?.overdue || 0,
         dueToday: dashboardResponse.deadlineSummary?.dueToday || 0,
         dueThisWeek: dashboardResponse.deadlineSummary?.dueThisWeek || 0,
       });
 
-      // Calculate high priority count
       const highPriorityCount = formattedAppeals.filter(
         (appeal) => appeal.priority === "high" || appeal.priority === "urgent"
       ).length;
@@ -131,7 +125,7 @@ export default function AdminDashboard() {
     }
 
     if (newFilters.status) {
-      console.log("Filtering by status:", newFilters.status); // Debug
+      console.log("Filtering by status:", newFilters.status);
       filtered = filtered.filter((appeal) => {
         console.log(
           "Appeal status:",
@@ -140,7 +134,7 @@ export default function AdminDashboard() {
           newFilters.status,
           "Match:",
           appeal.status === newFilters.status
-        ); // Debug
+        );
         return appeal.status === newFilters.status;
       });
     }

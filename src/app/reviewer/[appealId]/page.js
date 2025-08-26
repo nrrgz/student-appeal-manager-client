@@ -48,7 +48,6 @@ export default function AppealReview() {
       const response = await apiService.getReviewerAppeal(appealId);
       const appealData = response.appeal;
 
-      // Format the appeal data for the UI
       const formattedAppeal = {
         id: appealData._id,
         studentName: appealData.student
@@ -95,7 +94,6 @@ export default function AppealReview() {
 
   const handleDownload = async (file) => {
     try {
-      // Debug: Log the file object to see what's available
       console.log("File object for download:", file);
       console.log("File properties:", {
         originalName: file.originalName,
@@ -104,13 +102,11 @@ export default function AppealReview() {
         path: file.path,
       });
 
-      // Get the appeal ID from the current appeal
       if (!appeal || !appeal.id) {
         alert("Appeal information not available");
         return;
       }
 
-      // Get the filename to download
       const filename = file.originalName || file.filename || file.name;
       if (!filename) {
         alert("File name not available");
@@ -119,30 +115,25 @@ export default function AppealReview() {
 
       console.log("Using filename for download:", filename);
 
-      // Create the download URL
       const downloadUrl = `${
         process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"
       }/api/reviewer/appeals/${appeal.id}/evidence/${encodeURIComponent(
         filename
       )}/download`;
 
-      // Get the auth token
       const token = localStorage.getItem("token");
       if (!token) {
         alert("Authentication required. Please log in again.");
         return;
       }
 
-      // Create a temporary link element and trigger download
       const link = document.createElement("a");
       link.href = downloadUrl;
       link.download =
         file.originalName || file.filename || file.name || "download";
 
-      // Add authorization header
       link.setAttribute("data-token", token);
 
-      // For cross-origin requests, we need to fetch the file first
       const response = await fetch(downloadUrl, {
         method: "GET",
         headers: {
@@ -156,18 +147,14 @@ export default function AppealReview() {
         );
       }
 
-      // Get the file blob
       const blob = await response.blob();
 
-      // Create a blob URL and trigger download
       const blobUrl = window.URL.createObjectURL(blob);
       link.href = blobUrl;
 
-      // Trigger download
       document.body.appendChild(link);
       link.click();
 
-      // Cleanup
       document.body.removeChild(link);
       window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
@@ -183,14 +170,12 @@ export default function AppealReview() {
       setSubmitting(true);
       setError(null);
 
-      // Upload the file using the API service
       const response = await apiService.uploadReviewerEvidence(appealId, [
         uploadedFile,
       ]);
 
       console.log("Evidence uploaded successfully:", response);
 
-      // Reset form and refresh appeal data
       setUploadedFile(null);
       setShowUploadForm(false);
       await fetchAppeal();
@@ -225,7 +210,6 @@ export default function AppealReview() {
         isInternal: true,
       });
 
-      // Refresh the appeal data to get the updated notes
       await fetchAppeal();
       setNewNote("");
     } catch (error) {
@@ -246,7 +230,6 @@ export default function AppealReview() {
         isInternal: false,
       });
 
-      // Refresh the appeal data to get the updated comments
       await fetchAppeal();
       setNewComment("");
     } catch (error) {
@@ -267,7 +250,6 @@ export default function AppealReview() {
         notes: `Status updated to: ${newStatus}`,
       });
 
-      // Refresh the appeal data to get the updated status
       await fetchAppeal();
     } catch (error) {
       console.error("Failed to update status:", error);
@@ -290,22 +272,18 @@ export default function AppealReview() {
     try {
       setSubmitting(true);
 
-      // Update status to review complete
       await apiService.updateAppealStatus(appealId, {
         status: "decision made",
         notes: `Review completed. Recommendation: ${recommendation}. Decision: ${decision}.`,
       });
 
-      // Add a note with the recommendation and decision
       await apiService.addAppealNote(appealId, {
         content: `Review Recommendation: ${recommendation}\nDecision: ${decision}`,
         isInternal: true,
       });
 
-      // Refresh the appeal data
       await fetchAppeal();
 
-      // Show success message or redirect
       alert("Review submitted successfully!");
     } catch (error) {
       console.error("Failed to submit review:", error);

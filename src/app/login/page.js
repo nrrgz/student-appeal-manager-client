@@ -43,7 +43,6 @@ export default function LoginPage() {
       }));
     }
 
-    // Clear auth error when user starts typing
     if (authError) {
       clearError();
     }
@@ -106,14 +105,12 @@ export default function LoginPage() {
 
     try {
       if (isLogin) {
-        // Login
         await login({
           email: formData.email,
           password: formData.password,
           role: selectedRole,
         });
 
-        // Redirect based on role
         if (selectedRole === "student") {
           router.push("/student");
         } else if (selectedRole === "admin") {
@@ -123,7 +120,6 @@ export default function LoginPage() {
           router.push("/reviewer");
         }
       } else {
-        // Register
         const userData = {
           email: formData.email,
           password: formData.password,
@@ -135,8 +131,6 @@ export default function LoginPage() {
         };
 
         await register(userData);
-
-        // Redirect based on role
         if (selectedRole === "student") {
           router.push("/student");
         } else if (selectedRole === "admin") {
@@ -147,7 +141,6 @@ export default function LoginPage() {
       }
     } catch (error) {
       console.error("Authentication error:", error);
-      // Error is already set in the context
     }
   };
 

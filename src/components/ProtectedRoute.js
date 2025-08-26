@@ -18,7 +18,6 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
       requiredRole &&
       user?.role !== requiredRole
     ) {
-      // Redirect to appropriate role page if user has different role
       if (user?.role === "student") {
         router.push("/student");
       } else if (user?.role === "admin") {
@@ -41,11 +40,11 @@ const ProtectedRoute = ({ children, requiredRole = null }) => {
   }
 
   if (!isAuthenticated) {
-    return null; // Will redirect to login
+    return null;
   }
 
   if (requiredRole && user?.role !== requiredRole) {
-    return null; // Will redirect to appropriate role page
+    return null;
   }
 
   return children;

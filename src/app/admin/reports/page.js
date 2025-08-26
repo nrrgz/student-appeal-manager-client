@@ -9,9 +9,8 @@ import apiService from "../../../services/api";
 export default function StatisticsDashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [dateRange, setDateRange] = useState("30"); // days
+  const [dateRange, setDateRange] = useState("30");
 
-  // Fetch real data from API
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -20,34 +19,27 @@ export default function StatisticsDashboard() {
           dateRange,
         });
 
-        // Transform API data to match frontend structure
         const apiData = response;
 
-        // Calculate pending appeals (submitted + under review + awaiting information)
         const pendingAppeals =
           (apiData.statusSummary.submitted || 0) +
           (apiData.statusSummary["under review"] || 0) +
           (apiData.statusSummary["awaiting information"] || 0);
 
-        // Calculate resolved appeals (decision made + resolved)
         const resolvedAppeals =
           (apiData.statusSummary["decision made"] || 0) +
           (apiData.statusSummary.resolved || 0);
 
-        // Calculate rejected appeals
         const rejectedAppeals = apiData.statusSummary.rejected || 0;
 
-        // Transform type counts to common grounds format
         const commonGrounds = apiData.typeCounts.map((type) => ({
           ground: type._id,
           count: type.count,
           percentage: Math.round((type.count / apiData.total) * 100 * 10) / 10,
         }));
 
-        // Transform department counts to department stats format
         const departmentStats = apiData.departmentCounts.map((dept) => {
           const deptTotal = dept.count;
-          // For now, we'll estimate resolved and rejected based on overall ratios
           const resolvedRatio =
             apiData.total > 0 ? resolvedAppeals / apiData.total : 0;
           const rejectedRatio =
@@ -61,7 +53,6 @@ export default function StatisticsDashboard() {
           };
         });
 
-        // Transform monthly trends
         const monthlyTrends = apiData.monthlyTrends.slice(-6).map((trend) => ({
           month: new Date(trend.month).toLocaleDateString("en-US", {
             month: "short",
@@ -70,7 +61,6 @@ export default function StatisticsDashboard() {
           resolved: trend.resolved,
         }));
 
-        // Create resolution time distribution
         const avgResolutionTime =
           apiData.resolutionStats.avgResolutionTime || 0;
         const resolutionTimes = {
@@ -95,7 +85,6 @@ export default function StatisticsDashboard() {
         setStats(transformedStats);
       } catch (error) {
         console.error("Failed to fetch reports:", error);
-        // Fallback to mock data if API fails
         const mockStats = {
           totalAppeals: 0,
           pendingAppeals: 0,
@@ -123,7 +112,6 @@ export default function StatisticsDashboard() {
 
   const handleDateRangeChange = (range) => {
     setDateRange(range);
-    // The useEffect will automatically refetch data when dateRange changes
   };
 
   const downloadCSV = async () => {

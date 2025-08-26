@@ -6,11 +6,9 @@ class ApiService {
     this.baseURL = API_BASE_URL;
   }
 
-  // Helper method to make HTTP requests
   async request(endpoint, options = {}) {
     const url = `${this.baseURL}${endpoint}`;
 
-    // Add auth token if available
     const token = this.getToken();
     console.log("API Request - URL:", url);
     console.log("API Request - Token:", token ? "Token exists" : "No token");
@@ -47,15 +45,12 @@ class ApiService {
     }
   }
 
-  // Get stored token
   getToken() {
     if (typeof window !== "undefined") {
-      // First try to get token from dedicated storage
       let token =
         localStorage.getItem("authToken") ||
         sessionStorage.getItem("authToken");
 
-      // If no dedicated token, try to get from userInfo
       if (!token) {
         const userInfo = localStorage.getItem("userInfo");
         if (userInfo) {
@@ -73,7 +68,6 @@ class ApiService {
     return null;
   }
 
-  // Store token
   setToken(token, rememberMe = false) {
     if (typeof window !== "undefined") {
       if (rememberMe) {
@@ -84,7 +78,6 @@ class ApiService {
     }
   }
 
-  // Remove token
   removeToken() {
     if (typeof window !== "undefined") {
       localStorage.removeItem("authToken");
@@ -92,7 +85,6 @@ class ApiService {
     }
   }
 
-  // Auth methods
   async login(credentials) {
     return this.request("/auth/login", {
       method: "POST",
@@ -130,12 +122,10 @@ class ApiService {
     }
   }
 
-  // Check if user is authenticated
   isAuthenticated() {
     return !!this.getToken();
   }
 
-  // Appeals methods
   async getStudentAppeals() {
     return this.request("/appeals");
   }
@@ -145,7 +135,6 @@ class ApiService {
   }
 
   async createAppeal(appealData) {
-    // Check if appealData is FormData (for file uploads)
     if (appealData instanceof FormData) {
       const token = this.getToken();
       const url = `${this.baseURL}/appeals`;
@@ -160,7 +149,6 @@ class ApiService {
         config.headers.Authorization = `Bearer ${token}`;
       }
 
-      // Don't set Content-Type for FormData - let the browser set it with boundary
       const response = await fetch(url, config);
       const data = await response.json();
 
@@ -172,7 +160,6 @@ class ApiService {
 
       return data;
     } else {
-      // Handle regular JSON data
       return this.request("/appeals", {
         method: "POST",
         body: JSON.stringify(appealData),
@@ -180,7 +167,6 @@ class ApiService {
     }
   }
 
-  // Reviewer methods
   async getReviewerAppeals() {
     return this.request("/reviewer/appeals");
   }
@@ -288,7 +274,6 @@ class ApiService {
     return data;
   }
 
-  // Admin methods
   async getAdminAppeals(filters = {}) {
     const queryParams = new URLSearchParams();
     Object.entries(filters).forEach(([key, value]) => {
@@ -407,7 +392,6 @@ class ApiService {
       ? `/admin/reports/export-csv?${queryParams.toString()}`
       : "/admin/reports/export-csv";
 
-    // For CSV download, we need to handle the response differently
     const url = `${this.baseURL}${endpoint}`;
     const token = this.getToken();
 
@@ -470,7 +454,6 @@ class ApiService {
     });
   }
 
-  // Deadline management methods
   async setAppealDeadline(appealId, deadlineData) {
     return this.request(`/admin/appeals/${appealId}/deadline`, {
       method: "PUT",
@@ -508,7 +491,6 @@ class ApiService {
     });
   }
 
-  // File download methods
   async downloadEvidenceFile(appealId, filename, role = "student") {
     const endpoint = `/${role}/appeals/${appealId}/evidence/${encodeURIComponent(
       filename
@@ -517,7 +499,6 @@ class ApiService {
   }
 
   async downloadStudentEvidenceFile(appealId, filename) {
-    // For student downloads, the route is /api/appeals/:id/evidence/:filename/download
     const endpoint = `/appeals/${appealId}/evidence/${encodeURIComponent(
       filename
     )}/download`;
@@ -533,6 +514,5 @@ class ApiService {
   }
 }
 
-// Create and export a single instance
 const apiService = new ApiService();
 export default apiService;

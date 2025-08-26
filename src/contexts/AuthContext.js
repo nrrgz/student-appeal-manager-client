@@ -18,14 +18,12 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Check if user is authenticated on mount
   useEffect(() => {
     const checkAuth = async () => {
       try {
         if (apiService.isAuthenticated()) {
           const response = await apiService.getProfile();
           setUser(response.user);
-          // Store user info in localStorage
           localStorage.setItem("userInfo", JSON.stringify(response.user));
         }
       } catch (error) {
@@ -47,15 +45,12 @@ export const AuthProvider = ({ children }) => {
 
       const response = await apiService.login(credentials);
 
-      // Store token
       apiService.setToken(response.token, credentials.rememberMe);
 
       localStorage.setItem("token", response.token);
 
-      // Set user data
       setUser(response.user);
 
-      // Store user info in localStorage
       localStorage.setItem("userInfo", JSON.stringify(response.user));
 
       return response;
@@ -74,13 +69,10 @@ export const AuthProvider = ({ children }) => {
 
       const response = await apiService.register(userData);
 
-      // Store token
       apiService.setToken(response.token, false);
 
-      // Set user data
       setUser(response.user);
 
-      // Store user info in localStorage
       localStorage.setItem("userInfo", JSON.stringify(response.user));
 
       return response;
@@ -100,7 +92,6 @@ export const AuthProvider = ({ children }) => {
     } finally {
       setUser(null);
       setError(null);
-      // Remove user info from localStorage
       localStorage.removeItem("userInfo");
     }
   };
@@ -110,7 +101,6 @@ export const AuthProvider = ({ children }) => {
       setError(null);
       const response = await apiService.updateProfile(profileData);
       setUser(response.user);
-      // Update user info in localStorage
       localStorage.setItem("userInfo", JSON.stringify(response.user));
       return response;
     } catch (error) {
