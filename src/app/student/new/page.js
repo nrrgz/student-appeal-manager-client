@@ -44,6 +44,9 @@ export default function NewAppeal() {
   const [uploadedFiles, setUploadedFiles] = useState([]);
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploadError, setUploadError] = useState(null);
+  const [uploadSuccess, setUploadSuccess] = useState(null);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [stepErrors, setStepErrors] = useState({});
 
   useEffect(() => {
     if (!Array.isArray(formData.evidence)) {
@@ -119,6 +122,15 @@ export default function NewAppeal() {
       ...prev,
       [field]: value,
     }));
+
+    // Clear field error when user starts typing/selecting
+    if (fieldErrors[field]) {
+      setFieldErrors((prev) => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
   const validateFile = (file) => {
@@ -132,14 +144,19 @@ export default function NewAppeal() {
     ];
 
     if (file.size > maxSize) {
-      return { valid: false, error: "File size exceeds 10MB limit" };
+      return {
+        valid: false,
+        error: `"${file.name}" exceeds 10MB limit (${(
+          file.size /
+          (1024 * 1024)
+        ).toFixed(1)}MB)`,
+      };
     }
 
     if (!allowedTypes.includes(file.type)) {
       return {
         valid: false,
-        error:
-          "File type not supported. Please upload PDF, DOC, DOCX, JPG, or PNG files only.",
+        error: `"${file.name}" has unsupported type "${file.type}". Please upload PDF, DOC, DOCX, JPG, or PNG files only.`,
       };
     }
 
@@ -196,6 +213,13 @@ export default function NewAppeal() {
           evidence: newEvidence,
         };
       });
+
+      // Show success message
+      setUploadSuccess(`${newFiles.length} file(s) uploaded successfully!`);
+      setUploadError(null);
+
+      // Clear success message after 3 seconds
+      setTimeout(() => setUploadSuccess(null), 3000);
     }
   };
 
@@ -249,10 +273,25 @@ export default function NewAppeal() {
   };
 
   const nextStep = () => {
+    // Clear previous errors
+    setFieldErrors({});
+    setStepErrors({});
+
     if (currentStep === 1 && !formData.deadlineCheck) {
       router.push("/student/late-submission-info");
       return;
     }
+
+    // Validate current step
+    const stepErrors = validateStep(currentStep);
+    if (Object.keys(stepErrors).length > 0) {
+      setFieldErrors(stepErrors);
+      setStepErrors({
+        [currentStep]: "Please fix the errors above before proceeding",
+      });
+      return;
+    }
+
     if (currentStep < 10) {
       setCurrentStep(currentStep + 1);
     }
@@ -262,6 +301,43 @@ export default function NewAppeal() {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
     }
+  };
+
+  const validateStep = (step) => {
+    const errors = {};
+
+    switch (step) {
+      case 1:
+        if (!formData.declaration)
+          errors.declaration = "Declaration must be accepted";
+        if (!formData.deadlineCheck)
+          errors.deadlineCheck = "Deadline check must be confirmed";
+        break;
+      case 2:
+        if (!formData.course.trim()) errors.course = "Course is required";
+        break;
+      case 3:
+        if (!formData.department.trim())
+          errors.department = "Department selection is required";
+        break;
+      case 5:
+        if (!formData.appealType) errors.appealType = "Appeal type is required";
+        break;
+      case 6:
+        if (!formData.grounds.length)
+          errors.grounds = "At least one ground must be selected";
+        break;
+      case 7:
+        if (!formData.statement.trim())
+          errors.statement = "Appeal statement is required";
+        break;
+      case 9:
+        if (!formData.confirmAll)
+          errors.confirmAll = "Final confirmation must be accepted";
+        break;
+    }
+
+    return errors;
   };
 
   const validateForm = () => {
@@ -379,6 +455,12 @@ export default function NewAppeal() {
 
       handleInputChange("submitted", true);
 
+      // Clear all errors on successful submission
+      setFieldErrors({});
+      setStepErrors({});
+      setUploadError(null);
+      setUploadSuccess(null);
+
       setTimeout(() => {
         router.push("/student");
       }, 3000);
@@ -390,19 +472,54 @@ export default function NewAppeal() {
     }
   };
 
+  const renderFieldError = (fieldName) => {
+    if (fieldErrors[fieldName]) {
+      return (
+        <p className="mt-1 text-sm text-red-600 flex items-center">
+          <svg className="w-4 h-4 mr-1" viewBox="0 0 20 20">
+            <circle cx="10" cy="10" r="10" fill="#dc2626" />
+            <path
+              fill="white"
+              d="M10 4a1 1 0 011 1v5a1 1 0 11-2 0V5a1 1 0 011-1zm0 10a1 1 0 100 2 1 1 0 000-2z"
+            />
+          </svg>
+          {fieldErrors[fieldName]}
+        </p>
+      );
+    }
+    return null;
+  };
+
   const renderStepContent = () => {
     switch (currentStep) {
       case 1:
         return (
           <div className="space-y-6">
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <h3 className="text-lg font-medium text-yellow-800 mb-2">
-                Important: Appeal Deadline
-              </h3>
-              <p className="text-yellow-700">
-                You must submit your appeal within 10 working days of receiving
-                your results. Late appeals will not be considered.
-              </p>
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg
+                    className="h-5 w-5 text-yellow-400"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-lg font-medium text-yellow-800 mb-2">
+                    Important: Appeal Deadline
+                  </h3>
+                  <p className="text-yellow-700">
+                    You must submit your appeal within 10 working days of
+                    receiving your results. Late appeals will not be considered.
+                  </p>
+                </div>
+              </div>
             </div>
 
             <div className="space-y-4">
@@ -420,6 +537,18 @@ export default function NewAppeal() {
                   deadline
                 </span>
               </label>
+              {fieldErrors.deadlineCheck && (
+                <p className="ml-7 text-sm text-red-600 flex items-center">
+                  <svg className="w-4 h-4 mr-1" viewBox="0 0 20 20">
+                    <circle cx="10" cy="10" r="10" fill="#dc2626" />
+                    <path
+                      fill="white"
+                      d="M10 4a1 1 0 011 1v5a1 1 0 11-2 0V5a1 1 0 011-1zm0 10a1 1 0 100 2 1 1 0 000-2z"
+                    />
+                  </svg>
+                  {fieldErrors.deadlineCheck}
+                </p>
+              )}
 
               <label className="flex items-start">
                 <input
@@ -435,6 +564,22 @@ export default function NewAppeal() {
                   and accurate to the best of my knowledge
                 </span>
               </label>
+              {fieldErrors.declaration && (
+                <p className="text-sm text-red-600 flex items-center">
+                  <svg
+                    className="w-4 h-4 mr-1"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  {fieldErrors.declaration}
+                </p>
+              )}
             </div>
           </div>
         );
@@ -525,10 +670,15 @@ export default function NewAppeal() {
                   type="text"
                   value={formData.course}
                   onChange={(e) => handleInputChange("course", e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900"
+                  className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900 ${
+                    fieldErrors.course
+                      ? "border-red-300 bg-red-50"
+                      : "border-gray-300"
+                  }`}
                   placeholder="e.g., Computer Science, Medicine, Law"
                   required
                 />
+                {renderFieldError("course")}
               </div>
             </div>
           </div>
@@ -556,7 +706,11 @@ export default function NewAppeal() {
                 onChange={(e) =>
                   handleInputChange("department", e.target.value)
                 }
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900 ${
+                  fieldErrors.department
+                    ? "border-red-300 bg-red-50"
+                    : "border-gray-300"
+                }`}
                 required
               >
                 <option value="">Select your department</option>
@@ -571,6 +725,7 @@ export default function NewAppeal() {
                 <option value="Law">Law</option>
                 <option value="Other">Other</option>
               </select>
+              {renderFieldError("department")}
               {formData.department === "Other" && (
                 <input
                   type="text"
@@ -693,6 +848,22 @@ export default function NewAppeal() {
                   </label>
                 ))}
               </div>
+              {fieldErrors.appealType && (
+                <p className="mt-2 text-sm text-red-600 flex items-center">
+                  <svg
+                    className="w-4 h-4 mr-1"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  {fieldErrors.appealType}
+                </p>
+              )}
             </div>
           </div>
         );
@@ -730,6 +901,22 @@ export default function NewAppeal() {
                   </label>
                 ))}
               </div>
+              {fieldErrors.grounds && (
+                <p className="mt-2 text-sm text-red-600 flex items-center">
+                  <svg
+                    className="w-4 h-4 mr-1"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  {fieldErrors.grounds}
+                </p>
+              )}
             </div>
           </div>
         );
@@ -745,10 +932,15 @@ export default function NewAppeal() {
                 value={formData.statement}
                 onChange={(e) => handleInputChange("statement", e.target.value)}
                 rows={8}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900"
+                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900 ${
+                  fieldErrors.statement
+                    ? "border-red-300 bg-red-50"
+                    : "border-gray-300"
+                }`}
                 placeholder="Please provide a clear and detailed explanation of your appeal, including relevant dates, circumstances, and any supporting evidence..."
                 required
               />
+              {renderFieldError("statement")}
               <p className="mt-2 text-sm text-gray-500">
                 Be as specific as possible. Include dates, names, and any
                 relevant details that support your case.
@@ -817,6 +1009,35 @@ export default function NewAppeal() {
                 </p>
               </div>
             </div>
+
+            {/* Success Display */}
+            {uploadSuccess && (
+              <div className="bg-green-50 border border-green-200 rounded-md p-4">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg
+                      className="h-5 w-5 text-green-400"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-green-800">
+                      Upload Successful
+                    </h3>
+                    <div className="mt-2 text-sm text-green-700">
+                      {uploadSuccess}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Error Display */}
             {uploadError && (
@@ -1008,6 +1229,17 @@ export default function NewAppeal() {
               </div>
             </div>
 
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h4 className="font-medium text-blue-800 mb-2">
+                Data Protection & Privacy
+              </h4>
+              <p className="text-sm text-blue-700 mb-3">
+                I consent to the University of Sheffield processing my personal
+                data, including any sensitive evidence I upload, for the purpose
+                of handling my academic appeal, in accordance with GDPR.
+              </p>
+            </div>
+
             <label className="flex items-start">
               <input
                 type="checkbox"
@@ -1022,6 +1254,22 @@ export default function NewAppeal() {
                 to the best of my knowledge
               </span>
             </label>
+            {fieldErrors.confirmAll && (
+              <p className="ml-7 text-sm text-red-600 flex items-center">
+                <svg
+                  className="w-4 h-4 mr-1"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                {fieldErrors.confirmAll}
+              </p>
+            )}
           </div>
         );
 
@@ -1146,6 +1394,24 @@ export default function NewAppeal() {
 
         <div className="max-w-4xl mx-auto px-6 py-8">
           <div className="bg-white rounded-lg shadow-lg p-8">
+            {/* Progress Bar */}
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-700">
+                  Step {currentStep} of {steps.length}
+                </span>
+                <span className="text-sm text-gray-500">
+                  {Math.round((currentStep / steps.length) * 100)}% Complete
+                </span>
+              </div>
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-purple-600 h-2 rounded-full transition-all duration-300 ease-in-out"
+                  style={{ width: `${(currentStep / steps.length) * 100}%` }}
+                ></div>
+              </div>
+            </div>
+
             <div className="mb-8">
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
                 {steps[currentStep - 1].title}

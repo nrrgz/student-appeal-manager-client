@@ -91,6 +91,33 @@ export default function AppealDetail() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
+  const formatActionTitle = (action) => {
+    switch (action) {
+      case "deadline_set":
+        return "Deadline set";
+      case "deadline_set_bulk":
+        return "Deadlines set";
+      case "appeal_submitted":
+        return "Appeal submitted";
+      case "status_updated":
+        return "Status updated";
+      case "note_added":
+        return "Note added";
+      case "admin_note_added":
+        return "Admin note added";
+      case "appeal_assigned":
+        return "Appeal assigned";
+      case "priority_set":
+        return "Priority set";
+      default:
+        // Convert snake_case to Title Case
+        return action
+          .split("_")
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ");
+    }
+  };
+
   const handleDownload = async (file) => {
     try {
       console.log("File object for download:", file);
@@ -438,7 +465,7 @@ export default function AppealDetail() {
                               <div className="min-w-0 flex-1 pt-1.5 flex justify-between space-x-4">
                                 <div>
                                   <p className="text-sm font-medium text-gray-900">
-                                    {event.action}
+                                    {formatActionTitle(event.action)}
                                   </p>
                                   <p className="text-sm text-gray-600 mt-1">
                                     {event.description}
