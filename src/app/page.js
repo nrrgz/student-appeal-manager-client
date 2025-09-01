@@ -67,12 +67,26 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      {/* Skip to main content link */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-purple-600 text-white px-4 py-2 rounded z-50"
+      >
+        Skip to main content
+      </a>
+
       {/* Hero Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
+      <section
+        className="py-20 px-4 sm:px-6 lg:px-8"
+        aria-labelledby="hero-heading"
+      >
         <div className="max-w-7xl mx-auto text-center">
-          <h2 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
+          <h1
+            id="hero-heading"
+            className="text-4xl md:text-6xl font-bold text-gray-900 mb-6"
+          >
             Streamline Your Academic Appeals
-          </h2>
+          </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
             The University of Sheffield's comprehensive appeal management system
             designed to make the appeal process transparent, efficient, and
@@ -82,14 +96,16 @@ export default function Home() {
             {isAuthenticated ? (
               <button
                 onClick={handleDashboard}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors shadow-lg"
+                className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+                aria-label="Go to your dashboard"
               >
                 Go to Dashboard
               </button>
             ) : (
               <button
                 onClick={handleGetStarted}
-                className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors shadow-lg"
+                className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+                aria-label="Start your academic appeal process"
               >
                 Start Your Appeal
               </button>
@@ -99,7 +115,12 @@ export default function Home() {
                 setActiveTab("help");
                 setPendingScroll("help-section");
               }}
-              className="border-2 border-purple-600 text-purple-600 hover:bg-purple-50 px-8 py-4 rounded-lg text-lg font-semibold transition-colors"
+              className="border-2 border-purple-600 text-purple-600 hover:bg-purple-50 px-8 py-4 rounded-lg text-lg font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+              aria-label={
+                isAuthenticated
+                  ? "Get help and support"
+                  : "Learn more about the appeal system"
+              }
             >
               {isAuthenticated ? "Get Help" : "Learn More"}
             </button>
@@ -108,20 +129,33 @@ export default function Home() {
       </section>
 
       {/* Main Content Tabs */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8">
+      <main
+        id="main-content"
+        className="py-16 px-4 sm:px-6 lg:px-8"
+        role="main"
+        aria-label="Main content"
+      >
         <div className="max-w-7xl mx-auto">
           {/* Tab Navigation */}
-          <div className="flex flex-wrap justify-center mb-12 border-b border-gray-200">
+          <nav
+            className="flex flex-wrap justify-center mb-12 border-b border-gray-200"
+            role="tablist"
+            aria-label="Content sections"
+          >
             <button
               onClick={() => {
                 setActiveTab("overview");
                 setPendingScroll("overview-section");
               }}
-              className={`px-6 py-3 text-sm font-medium rounded-t-lg transition-colors ${
+              className={`px-6 py-3 text-sm font-medium rounded-t-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
                 activeTab === "overview"
                   ? "text-purple-600 border-b-2 border-purple-600 bg-white"
                   : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
               }`}
+              role="tab"
+              aria-selected={activeTab === "overview"}
+              aria-controls="overview-section"
+              id="overview-tab"
             >
               Overview
             </button>
@@ -130,11 +164,15 @@ export default function Home() {
                 setActiveTab("features");
                 setPendingScroll("features-section");
               }}
-              className={`px-6 py-3 text-sm font-medium rounded-t-lg transition-colors ${
+              className={`px-6 py-3 text-sm font-medium rounded-t-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
                 activeTab === "features"
                   ? "text-purple-600 border-b-2 border-purple-600 bg-white"
                   : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
               }`}
+              role="tab"
+              aria-selected={activeTab === "features"}
+              aria-controls="features-section"
+              id="features-tab"
             >
               Features
             </button>
@@ -143,11 +181,15 @@ export default function Home() {
                 setActiveTab("help");
                 setPendingScroll("help-section");
               }}
-              className={`px-6 py-3 text-sm font-medium rounded-t-lg transition-colors ${
+              className={`px-6 py-3 text-sm font-medium rounded-t-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
                 activeTab === "help"
                   ? "text-purple-600 border-b-2 border-purple-600 bg-white"
                   : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
               }`}
+              role="tab"
+              aria-selected={activeTab === "help"}
+              aria-controls="help-section"
+              id="help-tab"
             >
               Help & Support
             </button>
@@ -156,21 +198,31 @@ export default function Home() {
                 setActiveTab("contact");
                 setPendingScroll("contact-section");
               }}
-              className={`px-6 py-3 text-sm font-medium rounded-t-lg transition-colors ${
+              className={`px-6 py-3 text-sm font-medium rounded-t-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
                 activeTab === "contact"
                   ? "text-purple-600 border-b-2 border-purple-600 bg-white"
                   : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
               }`}
+              role="tab"
+              aria-selected={activeTab === "contact"}
+              aria-controls="contact-section"
+              id="contact-tab"
             >
               Contact
             </button>
-          </div>
+          </nav>
 
           {/* Tab Content */}
           <div className="bg-white rounded-lg shadow-lg p-8">
             {/* Overview Tab */}
             {activeTab === "overview" && (
-              <div id="overview-section" className="space-y-8">
+              <div
+                id="overview-section"
+                className="space-y-8"
+                role="tabpanel"
+                aria-labelledby="overview-tab"
+                aria-hidden="false"
+              >
                 <div className="text-center mb-8">
                   <h3 className="text-3xl font-bold text-gray-900 mb-4">
                     Welcome to Student Appeal Manager
@@ -265,7 +317,13 @@ export default function Home() {
 
             {/* Features Tab */}
             {activeTab === "features" && (
-              <div id="features-section" className="space-y-8">
+              <div
+                id="features-section"
+                className="space-y-8"
+                role="tabpanel"
+                aria-labelledby="features-tab"
+                aria-hidden="false"
+              >
                 <h3 className="text-3xl font-bold text-gray-900 text-center mb-8">
                   Key Features
                 </h3>
@@ -404,7 +462,13 @@ export default function Home() {
 
             {/* Help Tab */}
             {activeTab === "help" && (
-              <div id="help-section" className="space-y-8">
+              <div
+                id="help-section"
+                className="space-y-8"
+                role="tabpanel"
+                aria-labelledby="help-tab"
+                aria-hidden="false"
+              >
                 <h3 className="text-3xl font-bold text-gray-900 text-center mb-8">
                   Help & Support
                 </h3>
@@ -499,7 +563,13 @@ export default function Home() {
 
             {/* Contact Tab */}
             {activeTab === "contact" && (
-              <div id="contact-section" className="space-y-8">
+              <div
+                id="contact-section"
+                className="space-y-8"
+                role="tabpanel"
+                aria-labelledby="contact-tab"
+                aria-hidden="false"
+              >
                 <h3 className="text-3xl font-bold text-gray-900 text-center mb-8">
                   Contact & Support
                 </h3>
@@ -638,7 +708,7 @@ export default function Home() {
             )}
           </div>
         </div>
-      </section>
+      </main>
 
       {/* Footer */}
       <Footer onNavigateToSection={handleFooterNavigation} />

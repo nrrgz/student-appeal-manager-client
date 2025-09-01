@@ -163,49 +163,88 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <div className="flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-        <div className="sm:mx-auto sm:w-full sm:max-w-md">
+      {/* Skip to main content link */}
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-purple-600 text-white px-4 py-2 rounded z-50"
+      >
+        Skip to main content
+      </a>
+
+      <main
+        id="main-content"
+        className="flex flex-col justify-center py-12 sm:px-6 lg:px-8"
+        role="main"
+        aria-label="Login and registration form"
+      >
+        <header className="sm:mx-auto sm:w-full sm:max-w-md">
           <div className="text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">
               Welcome to SAM
-            </h2>
+            </h1>
             <p className="text-gray-600 mb-8">Student Appeal Manager</p>
           </div>
-        </div>
+        </header>
 
         <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
           <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
             <div className="flex justify-center mb-6">
-              <div className="flex bg-gray-100 rounded-lg p-1">
+              <div
+                className="flex bg-gray-100 rounded-lg p-1"
+                role="tablist"
+                aria-label="Authentication mode"
+              >
                 <button
                   onClick={toggleMode}
-                  className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  className={`px-4 py-2 text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
                     isLogin
                       ? "bg-white text-purple-600 shadow-sm"
                       : "text-gray-600 hover:text-gray-900"
                   }`}
+                  role="tab"
+                  aria-selected={isLogin}
+                  aria-controls="signin-panel"
+                  id="signin-tab"
                 >
                   Sign In
                 </button>
                 <button
                   onClick={toggleMode}
-                  className={`px-4 py-2 text-sm font-medium rounded-md transition-colors ${
+                  className={`px-4 py-2 text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
                     !isLogin
                       ? "bg-white text-purple-600 shadow-sm"
                       : "text-gray-600 hover:text-gray-900"
                   }`}
+                  role="tab"
+                  aria-selected={!isLogin}
+                  aria-controls="signup-panel"
+                  id="signup-tab"
                 >
                   Register
                 </button>
               </div>
             </div>
 
-            <form className="space-y-6" onSubmit={handleSubmit}>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
+            <form
+              className="space-y-6"
+              onSubmit={handleSubmit}
+              role="tabpanel"
+              aria-labelledby={isLogin ? "signin-tab" : "signup-tab"}
+              id={isLogin ? "signin-panel" : "signup-panel"}
+              aria-hidden={false}
+            >
+              <fieldset>
+                <legend
+                  id="role-legend"
+                  className="block text-sm font-medium text-gray-700 mb-3"
+                >
                   Select Your Role
-                </label>
-                <div className="space-y-3">
+                </legend>
+                <div
+                  className="space-y-3"
+                  role="radiogroup"
+                  aria-labelledby="role-legend"
+                >
                   {[
                     {
                       id: "student",
@@ -228,12 +267,21 @@ export default function LoginPage() {
                   ].map((role) => (
                     <div
                       key={role.id}
-                      className={`relative border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 ${
+                      className={`relative border-2 rounded-lg p-4 cursor-pointer transition-all duration-200 focus-within:ring-2 focus-within:ring-purple-500 focus-within:ring-offset-2 ${
                         selectedRole === role.id
                           ? "border-purple-600 bg-purple-50"
                           : "border-gray-200 hover:border-purple-300 hover:bg-gray-50"
                       }`}
                       onClick={() => handleRoleSelect(role.id)}
+                      role="radio"
+                      aria-checked={selectedRole === role.id}
+                      tabIndex={0}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          handleRoleSelect(role.id);
+                        }
+                      }}
                     >
                       <div className="flex items-center">
                         <div className="flex-shrink-0">
@@ -248,12 +296,16 @@ export default function LoginPage() {
                               checked={selectedRole === role.id}
                               onChange={() => handleRoleSelect(role.id)}
                               className="h-4 w-4 text-purple-600 focus:ring-purple-500 border-gray-300"
+                              aria-describedby={`${role.id}-description`}
                             />
                             <label className="ml-2 block text-sm font-medium text-gray-900">
                               {role.label}
                             </label>
                           </div>
-                          <p className="text-sm text-gray-500 mt-1">
+                          <p
+                            id={`${role.id}-description`}
+                            className="text-sm text-gray-500 mt-1"
+                          >
                             {role.description}
                           </p>
                         </div>
@@ -262,9 +314,15 @@ export default function LoginPage() {
                   ))}
                 </div>
                 {errors.role && (
-                  <p className="mt-1 text-sm text-red-600">{errors.role}</p>
+                  <p
+                    className="mt-1 text-sm text-red-600"
+                    role="alert"
+                    aria-live="polite"
+                  >
+                    {errors.role}
+                  </p>
                 )}
-              </div>
+              </fieldset>
 
               {!isLogin && (
                 <div className="space-y-4">
@@ -372,10 +430,14 @@ export default function LoginPage() {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Email Address
                 </label>
                 <input
+                  id="email"
                   type="email"
                   name="email"
                   value={formData.email}
@@ -383,18 +445,32 @@ export default function LoginPage() {
                   className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900 ${
                     errors.email ? "border-red-300" : "border-gray-300"
                   }`}
+                  aria-describedby={errors.email ? "email-error" : undefined}
+                  aria-invalid={!!errors.email}
+                  required
                 />
                 {errors.email && (
-                  <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+                  <p
+                    id="email-error"
+                    className="mt-1 text-sm text-red-600"
+                    role="alert"
+                    aria-live="polite"
+                  >
+                    {errors.email}
+                  </p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700"
+                >
                   Password
                 </label>
                 <div className="relative">
                   <input
+                    id="password"
                     type={showPassword ? "text" : "password"}
                     name="password"
                     value={formData.password}
@@ -402,15 +478,21 @@ export default function LoginPage() {
                     className={`mt-1 block w-full pr-10 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900 ${
                       errors.password ? "border-red-300" : "border-gray-300"
                     }`}
+                    aria-describedby={
+                      errors.password ? "password-error" : undefined
+                    }
+                    aria-invalid={!!errors.password}
+                    required
                   />
                   <button
                     type="button"
                     onClick={togglePasswordVisibility}
-                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                    className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 rounded"
                     aria-label={
                       showPassword ? "Hide password" : "Show password"
                     }
                     title={showPassword ? "Hide password" : "Show password"}
+                    aria-controls="password"
                   >
                     {showPassword ? (
                       <svg
@@ -450,17 +532,28 @@ export default function LoginPage() {
                   </button>
                 </div>
                 {errors.password && (
-                  <p className="mt-1 text-sm text-red-600">{errors.password}</p>
+                  <p
+                    id="password-error"
+                    className="mt-1 text-sm text-red-600"
+                    role="alert"
+                    aria-live="polite"
+                  >
+                    {errors.password}
+                  </p>
                 )}
               </div>
 
               {!isLogin && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
+                  <label
+                    htmlFor="confirmPassword"
+                    className="block text-sm font-medium text-gray-700"
+                  >
                     Confirm Password
                   </label>
                   <div className="relative">
                     <input
+                      id="confirmPassword"
                       type={showConfirmPassword ? "text" : "password"}
                       name="confirmPassword"
                       value={formData.confirmPassword}
@@ -470,11 +563,18 @@ export default function LoginPage() {
                           ? "border-red-300"
                           : "border-gray-300"
                       }`}
+                      aria-describedby={
+                        errors.confirmPassword
+                          ? "confirmPassword-error"
+                          : undefined
+                      }
+                      aria-invalid={!!errors.confirmPassword}
+                      required
                     />
                     <button
                       type="button"
                       onClick={toggleConfirmPasswordVisibility}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 rounded"
                       aria-label={
                         showConfirmPassword
                           ? "Hide confirm password"
@@ -485,6 +585,7 @@ export default function LoginPage() {
                           ? "Hide confirm password"
                           : "Show confirm password"
                       }
+                      aria-controls="confirmPassword"
                     >
                       {showConfirmPassword ? (
                         <svg
@@ -524,7 +625,12 @@ export default function LoginPage() {
                     </button>
                   </div>
                   {errors.confirmPassword && (
-                    <p className="mt-1 text-sm text-red-600">
+                    <p
+                      id="confirmPassword-error"
+                      className="mt-1 text-sm text-red-600"
+                      role="alert"
+                      aria-live="polite"
+                    >
                       {errors.confirmPassword}
                     </p>
                   )}
@@ -532,7 +638,11 @@ export default function LoginPage() {
               )}
 
               {(errors.general || authError) && (
-                <div className="bg-red-50 border border-red-200 rounded-md p-4">
+                <div
+                  className="bg-red-50 border border-red-200 rounded-md p-4"
+                  role="alert"
+                  aria-live="polite"
+                >
                   <p className="text-sm text-red-600">
                     {errors.general || authError}
                   </p>
@@ -544,9 +654,18 @@ export default function LoginPage() {
                   type="submit"
                   disabled={!selectedRole}
                   className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500 transition-colors duration-200 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                  aria-describedby={!selectedRole ? "role-required" : undefined}
                 >
                   {isLogin ? "Sign In" : "Create Account"}
                 </button>
+                {!selectedRole && (
+                  <p
+                    id="role-required"
+                    className="mt-1 text-sm text-gray-500 text-center"
+                  >
+                    Please select a role to continue
+                  </p>
+                )}
               </div>
             </form>
 
@@ -573,7 +692,7 @@ export default function LoginPage() {
             </div>
           </div>
         </div>
-      </div>
+      </main>
       <Footer />
     </div>
   );

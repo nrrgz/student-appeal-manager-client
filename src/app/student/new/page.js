@@ -1353,18 +1353,35 @@ export default function NewAppeal() {
   return (
     <ProtectedRoute requiredRole="student">
       <div className="min-h-screen bg-gray-50">
-        <div className="bg-white border-b border-gray-200">
+        {/* Skip to main content link */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-purple-600 text-white px-4 py-2 rounded z-50"
+        >
+          Skip to main content
+        </a>
+
+        <header className="bg-white border-b border-gray-200">
           <div className="max-w-7xl mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <button
                   onClick={() => router.push("/student")}
-                  className="text-gray-600 hover:text-red-600 font-medium text-sm transition-colors"
+                  className="text-gray-600 hover:text-red-600 font-medium text-sm transition-colors focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 rounded"
+                  aria-label="Cancel appeal creation and return to dashboard"
                 >
                   ← Cancel
                 </button>
               </div>
-              <div className="flex items-center">
+              <nav
+                className="flex items-center"
+                aria-label="Appeal creation progress"
+                role="progressbar"
+                aria-valuenow={currentStep}
+                aria-valuemin={1}
+                aria-valuemax={steps.length}
+                aria-label={`Step ${currentStep} of ${steps.length}`}
+              >
                 {steps.map((step, index) => (
                   <div key={step.id} className="flex items-center">
                     <div
@@ -1372,6 +1389,13 @@ export default function NewAppeal() {
                         step.id <= currentStep
                           ? "bg-purple-600 text-white"
                           : "bg-gray-200 text-gray-600"
+                      }`}
+                      aria-label={`Step ${step.id}: ${step.title}${
+                        step.id === currentStep
+                          ? " (current)"
+                          : step.id < currentStep
+                          ? " (completed)"
+                          : " (pending)"
                       }`}
                     >
                       {step.id}
@@ -1383,16 +1407,22 @@ export default function NewAppeal() {
                             ? "bg-purple-600"
                             : "bg-gray-200"
                         }`}
+                        aria-hidden="true"
                       />
                     )}
                   </div>
                 ))}
-              </div>
+              </nav>
             </div>
           </div>
-        </div>
+        </header>
 
-        <div className="max-w-4xl mx-auto px-6 py-8">
+        <main
+          id="main-content"
+          className="max-w-4xl mx-auto px-6 py-8"
+          role="main"
+          aria-label="Appeal creation form"
+        >
           <div className="bg-white rounded-lg shadow-lg p-8">
             {/* Progress Bar */}
             <div className="mb-6">
@@ -1404,7 +1434,14 @@ export default function NewAppeal() {
                   {Math.round((currentStep / steps.length) * 100)}% Complete
                 </span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
+              <div
+                className="w-full bg-gray-200 rounded-full h-2"
+                role="progressbar"
+                aria-valuenow={currentStep}
+                aria-valuemin={1}
+                aria-valuemax={steps.length}
+                aria-label={`Appeal creation progress: step ${currentStep} of ${steps.length}`}
+              >
                 <div
                   className="bg-purple-600 h-2 rounded-full transition-all duration-300 ease-in-out"
                   style={{ width: `${(currentStep / steps.length) * 100}%` }}
@@ -1412,18 +1449,22 @@ export default function NewAppeal() {
               </div>
             </div>
 
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+            <header className="mb-8">
+              <h1 className="text-2xl font-bold text-gray-900 mb-2">
                 {steps[currentStep - 1].title}
-              </h2>
+              </h1>
               <p className="text-gray-600">
                 {steps[currentStep - 1].description}
               </p>
-            </div>
+            </header>
 
             {/* Error Message */}
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
+              <div
+                className="bg-red-50 border border-red-200 rounded-md p-4 mb-6"
+                role="alert"
+                aria-live="polite"
+              >
                 <p className="text-sm text-red-600">{error}</p>
               </div>
             )}
@@ -1431,29 +1472,42 @@ export default function NewAppeal() {
             {renderStepContent()}
 
             {currentStep !== 10 && (
-              <div className="flex justify-between mt-8 pt-6 border-t border-gray-200">
+              <nav
+                className="flex justify-between mt-8 pt-6 border-t border-gray-200"
+                aria-label="Form navigation"
+              >
                 <button
                   onClick={prevStep}
                   disabled={currentStep === 1}
-                  className={`px-6 py-2 border border-gray-300 rounded-md font-medium ${
+                  className={`px-6 py-2 border border-gray-300 rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 ${
                     currentStep === 1
                       ? "text-gray-400 cursor-not-allowed"
                       : "text-gray-700 hover:bg-gray-50"
                   }`}
+                  aria-label={
+                    currentStep === 1
+                      ? "Previous step (disabled)"
+                      : "Go to previous step"
+                  }
                 >
                   Previous
                 </button>
 
                 <button
                   onClick={nextStep}
-                  className="px-6 py-2 bg-purple-600 text-white rounded-md font-medium hover:bg-purple-700 transition-colors"
+                  className="px-6 py-2 bg-purple-600 text-white rounded-md font-medium hover:bg-purple-700 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+                  aria-label={
+                    currentStep === 9
+                      ? "Review and submit appeal"
+                      : "Go to next step"
+                  }
                 >
                   {currentStep === 9 ? "Review & Submit" : "Next"}
                 </button>
-              </div>
+              </nav>
             )}
           </div>
-        </div>
+        </main>
         <Footer />
       </div>
     </ProtectedRoute>
