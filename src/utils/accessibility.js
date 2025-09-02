@@ -17,7 +17,6 @@ export const announceToScreenReader = (message, priority = "polite") => {
 
   document.body.appendChild(announcement);
 
-  // Remove after announcement
   setTimeout(() => {
     document.body.removeChild(announcement);
   }, 1000);
@@ -31,14 +30,11 @@ export const announceToScreenReader = (message, priority = "polite") => {
 export const manageFocus = (element, trap = false) => {
   if (!element) return;
 
-  // Focus the element
   element.focus();
 
   if (trap) {
-    // Store the previously focused element
     const previouslyFocused = document.activeElement;
 
-    // Find all focusable elements within the container
     const focusableElements = element.querySelectorAll(
       'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
     );
@@ -46,7 +42,6 @@ export const manageFocus = (element, trap = false) => {
     const firstFocusable = focusableElements[0];
     const lastFocusable = focusableElements[focusableElements.length - 1];
 
-    // Handle tab key to trap focus
     const handleTabKey = (e) => {
       if (e.key === "Tab") {
         if (e.shiftKey) {
@@ -65,7 +60,6 @@ export const manageFocus = (element, trap = false) => {
 
     element.addEventListener("keydown", handleTabKey);
 
-    // Return cleanup function
     return () => {
       element.removeEventListener("keydown", handleTabKey);
       if (previouslyFocused) {
@@ -184,7 +178,6 @@ export const createAccessibleError = (message, fieldId) => {
  * Keyboard navigation helpers
  */
 export const keyboardNavigation = {
-  // Handle Enter key for custom buttons
   handleEnterKey: (callback) => (e) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -192,7 +185,6 @@ export const keyboardNavigation = {
     }
   },
 
-  // Handle arrow keys for custom select components
   handleArrowKeys: (options, currentIndex, setIndex) => (e) => {
     switch (e.key) {
       case "ArrowDown":
@@ -206,7 +198,7 @@ export const keyboardNavigation = {
       case "Enter":
       case " ":
         e.preventDefault();
-        // Handle selection
+
         break;
     }
   },

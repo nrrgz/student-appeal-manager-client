@@ -378,7 +378,6 @@ export default function AppealManagement() {
     <ProtectedRoute requiredRole="admin">
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Error Display */}
           {error && (
             <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
               <div className="flex">
@@ -421,10 +420,8 @@ export default function AppealManagement() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Main Appeal Information */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
             <div className="lg:col-span-2 space-y-6">
-              {/* Appeal Header */}
               <div className="bg-white rounded-lg shadow p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-semibold text-gray-900">
@@ -509,21 +506,61 @@ export default function AppealManagement() {
                       {formatDate(appeal.createdAt)}
                     </p>
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">
-                      Current Deadline
-                    </label>
-                    <div className="flex items-center space-x-2">
-                      <p className="mt-1 text-sm text-gray-900">
-                        {formatDeadline(appeal.deadline)}
-                      </p>
-                      <button
-                        onClick={() => setShowDeadlineModal(true)}
-                        className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
-                      >
-                        {appeal.deadline ? "Update" : "Set"} Deadline
-                      </button>
+                </div>
+
+                {appeal.hasAdviser && (
+                  <div className="mt-6 pt-6 border-t border-gray-200">
+                    <h4 className="text-lg font-medium text-gray-900 mb-4">
+                      Adviser Information
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {appeal.adviserName && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Adviser Name
+                          </label>
+                          <p className="mt-1 text-sm text-gray-900">
+                            {appeal.adviserName}
+                          </p>
+                        </div>
+                      )}
+                      {appeal.adviserEmail && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Adviser Email
+                          </label>
+                          <p className="mt-1 text-sm text-gray-900">
+                            {appeal.adviserEmail}
+                          </p>
+                        </div>
+                      )}
+                      {appeal.adviserPhone && (
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700">
+                            Adviser Phone
+                          </label>
+                          <p className="mt-1 text-sm text-gray-900">
+                            {appeal.adviserPhone}
+                          </p>
+                        </div>
+                      )}
                     </div>
+                  </div>
+                )}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">
+                    Current Deadline
+                  </label>
+                  <div className="flex items-center space-x-2">
+                    <p className="mt-1 text-sm text-gray-900">
+                      {formatDeadline(appeal.deadline)}
+                    </p>
+                    <button
+                      onClick={() => setShowDeadlineModal(true)}
+                      className="text-indigo-600 hover:text-indigo-800 text-sm font-medium"
+                    >
+                      {appeal.deadline ? "Update" : "Set"} Deadline
+                    </button>
                   </div>
                 </div>
 
@@ -547,8 +584,83 @@ export default function AppealManagement() {
                   </p>
                 </div>
               </div>
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                  Change Status
+                </h3>
+                <div className="flex flex-col space-y-3">
+                  <select
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
+                    value={newStatus}
+                    onChange={(e) => setNewStatus(e.target.value)}
+                    disabled={submitting}
+                  >
+                    <option value="submitted">Submitted</option>
+                    <option value="under review">Under Review</option>
+                    <option value="awaiting information">
+                      Awaiting Information
+                    </option>
+                    <option value="decision made">Decision Made</option>
+                    <option value="resolved">Resolved</option>
+                    <option value="rejected">Rejected</option>
+                  </select>
+                  <button
+                    onClick={handleStatusChange}
+                    disabled={submitting}
+                    className="w-full bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {submitting ? "Updating..." : "Update Status"}
+                  </button>
+                </div>
+              </div>
 
-              {/* Student Comments */}
+              <div className="bg-white rounded-lg shadow p-6">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                  Uploaded Evidence
+                </h3>
+                {console.log(
+                  "Admin rendering evidence section:",
+                  appeal.evidence
+                )}
+                <div className="space-y-2">
+                  {Array.isArray(appeal.evidence) &&
+                  appeal.evidence.length > 0 ? (
+                    appeal.evidence.map((file, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-md"
+                      >
+                        <div>
+                          <p className="text-sm font-medium text-gray-900">
+                            {file.originalName ||
+                              file.filename ||
+                              file.name ||
+                              "Unknown file"}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {file.fileSize
+                              ? `${(file.fileSize / 1024 / 1024).toFixed(2)} MB`
+                              : "Unknown size"}{" "}
+                            • {formatDate(file.uploadedAt)}
+                          </p>
+                        </div>
+                        <button
+                          onClick={() => handleDownload(file)}
+                          className="text-indigo-600 hover:text-indigo-900 text-sm font-medium hover:bg-indigo-50 px-3 py-1 rounded-md transition-colors"
+                        >
+                          Download
+                        </button>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-gray-500 text-sm">
+                      No evidence files uploaded.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="lg:col-span-1 space-y-6">
               <div className="bg-white rounded-lg shadow p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
                   Comments Visible to Student
@@ -621,88 +733,6 @@ export default function AppealManagement() {
                 </div>
               </div>
 
-              {/* Evidence */}
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Uploaded Evidence
-                </h3>
-                {console.log(
-                  "Admin rendering evidence section:",
-                  appeal.evidence
-                )}
-                <div className="space-y-2">
-                  {Array.isArray(appeal.evidence) &&
-                  appeal.evidence.length > 0 ? (
-                    appeal.evidence.map((file, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between p-3 bg-gray-50 rounded-md"
-                      >
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">
-                            {file.originalName ||
-                              file.filename ||
-                              file.name ||
-                              "Unknown file"}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {file.fileSize
-                              ? `${(file.fileSize / 1024 / 1024).toFixed(2)} MB`
-                              : "Unknown size"}{" "}
-                            • {formatDate(file.uploadedAt)}
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => handleDownload(file)}
-                          className="text-indigo-600 hover:text-indigo-900 text-sm font-medium hover:bg-indigo-50 px-3 py-1 rounded-md transition-colors"
-                        >
-                          Download
-                        </button>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-gray-500 text-sm">
-                      No evidence files uploaded.
-                    </p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Sidebar */}
-            <div className="space-y-6">
-              {/* Status Management */}
-              <div className="bg-white rounded-lg shadow p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Change Status
-                </h3>
-                <div className="flex flex-col space-y-3">
-                  <select
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 text-gray-900"
-                    value={newStatus}
-                    onChange={(e) => setNewStatus(e.target.value)}
-                    disabled={submitting}
-                  >
-                    <option value="submitted">Submitted</option>
-                    <option value="under review">Under Review</option>
-                    <option value="awaiting information">
-                      Awaiting Information
-                    </option>
-                    <option value="decision made">Decision Made</option>
-                    <option value="resolved">Resolved</option>
-                    <option value="rejected">Rejected</option>
-                  </select>
-                  <button
-                    onClick={handleStatusChange}
-                    disabled={submitting}
-                    className="w-full bg-indigo-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {submitting ? "Updating..." : "Update Status"}
-                  </button>
-                </div>
-              </div>
-
-              {/* Appeal Assignment */}
               <div className="bg-white rounded-lg shadow p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
                   Assign Appeal
@@ -761,7 +791,6 @@ export default function AppealManagement() {
                 </div>
               </div>
 
-              {/* Internal Notes */}
               <div className="bg-white rounded-lg shadow p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
                   Internal Notes
@@ -839,7 +868,6 @@ export default function AppealManagement() {
         </div>
       </div>
 
-      {/* Deadline Modal */}
       {showDeadlineModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
@@ -917,7 +945,6 @@ export default function AppealManagement() {
         </div>
       )}
 
-      {/* Assignment Modal */}
       {showAssignmentModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
           <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">

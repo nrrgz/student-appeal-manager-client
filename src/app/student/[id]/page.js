@@ -110,7 +110,6 @@ export default function AppealDetail() {
       case "priority_set":
         return "Priority set";
       default:
-        // Convert snake_case to Title Case
         return action
           .split("_")
           .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -365,7 +364,6 @@ export default function AppealDetail() {
                 )}
               </div>
 
-              {/* Comments from Staff */}
               <div className="bg-white rounded-lg shadow p-6">
                 <h3 className="text-lg font-medium text-gray-900 mb-4">
                   Comments from Staff
@@ -560,6 +558,45 @@ export default function AppealDetail() {
                       {appeal.student?.email || "N/A"}
                     </p>
                   </div>
+                  {appeal.hasAdviser && (
+                    <>
+                      <div className="pt-3 border-t border-gray-200">
+                        <h4 className="font-medium text-gray-700 mb-2">
+                          Adviser Information
+                        </h4>
+                        {appeal.adviserName && (
+                          <div>
+                            <span className="font-medium text-gray-700">
+                              Adviser Name:
+                            </span>
+                            <p className="text-gray-600">
+                              {appeal.adviserName}
+                            </p>
+                          </div>
+                        )}
+                        {appeal.adviserEmail && (
+                          <div>
+                            <span className="font-medium text-gray-700">
+                              Adviser Email:
+                            </span>
+                            <p className="text-gray-600">
+                              {appeal.adviserEmail}
+                            </p>
+                          </div>
+                        )}
+                        {appeal.adviserPhone && (
+                          <div>
+                            <span className="font-medium text-gray-700">
+                              Adviser Phone:
+                            </span>
+                            <p className="text-gray-600">
+                              {appeal.adviserPhone}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
 
@@ -568,7 +605,6 @@ export default function AppealDetail() {
                   Help & FAQ
                 </h3>
                 <div className="space-y-4">
-                  {/* Quick Help Section */}
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <div className="flex items-start">
                       <svg
@@ -599,7 +635,6 @@ export default function AppealDetail() {
                     </div>
                   </div>
 
-                  {/* FAQ Section */}
                   <div className="space-y-3">
                     <details className="group">
                       <summary className="flex items-center justify-between cursor-pointer text-sm font-medium text-gray-700 hover:text-gray-900">
@@ -698,7 +733,6 @@ export default function AppealDetail() {
                     </details>
                   </div>
 
-                  {/* Useful Links */}
                   <div className="pt-3 border-t border-gray-200">
                     <h4 className="text-sm font-medium text-gray-700 mb-2">
                       Useful Resources

@@ -260,7 +260,6 @@ export default function AdminDashboard() {
     <ProtectedRoute requiredRole="admin">
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {/* Header with refresh button */}
           <div className="flex items-center justify-between mb-8">
             <h1 className="text-3xl font-bold text-gray-900">
               Admin Dashboard
@@ -294,7 +293,6 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Error Display */}
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
               <div className="flex">
@@ -329,7 +327,6 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {/* Stats Overview */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex items-center">
@@ -436,7 +433,6 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Deadline Statistics */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
             <div className="bg-white rounded-lg shadow p-6">
               <div className="flex items-center">
@@ -527,7 +523,6 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Filters */}
           <div className="bg-white rounded-lg shadow mb-6">
             <div className="px-6 py-4 border-b border-gray-200">
               <div className="flex items-center justify-between">
@@ -628,7 +623,6 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Appeals Table */}
           <div className="bg-white rounded-lg shadow">
             <div className="px-6 py-4 border-b border-gray-200">
               <div className="flex items-center justify-between">

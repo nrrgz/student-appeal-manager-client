@@ -133,7 +133,6 @@ export default function StatisticsDashboard() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <div className="bg-white shadow-sm border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -181,7 +180,6 @@ export default function StatisticsDashboard() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
@@ -287,7 +285,6 @@ export default function StatisticsDashboard() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Resolution Time Distribution */}
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">
               Resolution Time Distribution
@@ -328,7 +325,6 @@ export default function StatisticsDashboard() {
             </div>
           </div>
 
-          {/* Common Appeal Grounds */}
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-medium text-gray-900 mb-4">
               Common Appeal Grounds
@@ -354,7 +350,6 @@ export default function StatisticsDashboard() {
           </div>
         </div>
 
-        {/* Department Statistics */}
         <div className="mt-8 bg-white rounded-lg shadow">
           <div className="px-6 py-4 border-b border-gray-200">
             <h3 className="text-lg font-medium text-gray-900">
@@ -417,7 +412,6 @@ export default function StatisticsDashboard() {
           </div>
         </div>
 
-        {/* Monthly Trends */}
         <div className="mt-8 bg-white rounded-lg shadow p-6">
           <h3 className="text-lg font-medium text-gray-900 mb-4">
             Monthly Trends
@@ -441,7 +435,6 @@ export default function StatisticsDashboard() {
           </div>
         </div>
 
-        {/* Summary Cards */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg shadow p-6 text-white">
             <h3 className="text-lg font-medium mb-2">Success Rate</h3>

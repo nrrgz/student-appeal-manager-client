@@ -114,17 +114,6 @@ button:disabled {
 }
 
 /* Form field accessibility */
-input:invalid,
-select:invalid,
-textarea:invalid {
-  border-color: #dc2626;
-}
-
-input:invalid:focus,
-select:invalid:focus,
-textarea:invalid:focus {
-  outline-color: #dc2626;
-}
 
 /* Table accessibility */
 table {

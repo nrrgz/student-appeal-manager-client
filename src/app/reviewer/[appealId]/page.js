@@ -62,6 +62,10 @@ export default function AppealReview() {
         grounds: appealData.appealType || "N/A",
         submissionDate: appealData.createdAt,
         priority: appealData.priority || "Medium",
+        hasAdviser: appealData.hasAdviser || false,
+        adviserName: appealData.adviserName || "",
+        adviserEmail: appealData.adviserEmail || "",
+        adviserPhone: appealData.adviserPhone || "",
         description: appealData.statement || "No description provided",
         evidence: appealData.evidence || [],
         internalNotes:
@@ -364,7 +368,6 @@ export default function AppealReview() {
       <div className="min-h-screen bg-gray-50">
         <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
           <div className="px-4 py-6 sm:px-0">
-            {/* Header */}
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">
@@ -376,7 +379,6 @@ export default function AppealReview() {
               </div>
             </div>
 
-            {/* Status and Priority */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div className="bg-white shadow rounded-lg p-6">
                 <h3 className="text-base font-medium text-gray-500 mb-2">
@@ -412,7 +414,6 @@ export default function AppealReview() {
               </div>
             </div>
 
-            {/* Error Display */}
             {error && (
               <div className="bg-red-50 border border-red-200 rounded-md p-4 mb-6">
                 <div className="flex">
@@ -448,9 +449,7 @@ export default function AppealReview() {
             )}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Main Content */}
               <div className="lg:col-span-2 space-y-6">
-                {/* Student Information */}
                 <div className="bg-white shadow rounded-lg p-6">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">
                     Student Information
@@ -493,9 +492,48 @@ export default function AppealReview() {
                       </p>
                     </div>
                   </div>
+
+                  {appeal.hasAdviser && (
+                    <div className="mt-6 pt-6 border-t border-gray-200">
+                      <h4 className="text-md font-medium text-gray-900 mb-4">
+                        Adviser Information
+                      </h4>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {appeal.adviserName && (
+                          <div>
+                            <p className="text-sm text-gray-500">
+                              Adviser Name
+                            </p>
+                            <p className="text-sm font-medium text-gray-900">
+                              {appeal.adviserName}
+                            </p>
+                          </div>
+                        )}
+                        {appeal.adviserEmail && (
+                          <div>
+                            <p className="text-sm text-gray-500">
+                              Adviser Email
+                            </p>
+                            <p className="text-sm font-medium text-gray-900">
+                              {appeal.adviserEmail}
+                            </p>
+                          </div>
+                        )}
+                        {appeal.adviserPhone && (
+                          <div>
+                            <p className="text-sm text-gray-500">
+                              Adviser Phone
+                            </p>
+                            <p className="text-sm font-medium text-gray-900">
+                              {appeal.adviserPhone}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
-                {/* Appeal Details */}
                 <div className="bg-white shadow rounded-lg p-6">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">
                     Appeal Details
@@ -518,7 +556,6 @@ export default function AppealReview() {
                   </div>
                 </div>
 
-                {/* Evidence */}
                 <div className="bg-white shadow rounded-lg p-6">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-medium text-gray-900">
@@ -532,7 +569,6 @@ export default function AppealReview() {
                     </button>
                   </div>
 
-                  {/* Upload Form */}
                   {showUploadForm && (
                     <div className="mb-4 p-4 border border-gray-200 rounded-lg bg-gray-50">
                       <h4 className="text-sm font-medium text-gray-900 mb-3">
@@ -614,9 +650,7 @@ export default function AppealReview() {
                 </div>
               </div>
 
-              {/* Sidebar */}
               <div className="space-y-6">
-                {/* Review Actions */}
                 <div className="bg-white shadow rounded-lg p-6">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">
                     Review Actions
@@ -690,7 +724,6 @@ export default function AppealReview() {
                   </div>
                 </div>
 
-                {/* Internal Notes */}
                 <div className="bg-white shadow rounded-lg p-6">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">
                     Internal Notes
@@ -744,7 +777,6 @@ export default function AppealReview() {
                   </div>
                 </div>
 
-                {/* Student Comments */}
                 <div className="bg-white shadow rounded-lg p-6">
                   <h3 className="text-lg font-medium text-gray-900 mb-4">
                     Student Comments

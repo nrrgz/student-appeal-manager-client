@@ -67,7 +67,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
-      {/* Skip to main content link */}
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-purple-600 text-white px-4 py-2 rounded z-50"
@@ -75,7 +74,6 @@ export default function Home() {
         Skip to main content
       </a>
 
-      {/* Hero Section */}
       <section
         className="py-20 px-4 sm:px-6 lg:px-8"
         aria-labelledby="hero-heading"
@@ -128,7 +126,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Main Content Tabs */}
       <main
         id="main-content"
         className="py-16 px-4 sm:px-6 lg:px-8"
@@ -136,7 +133,6 @@ export default function Home() {
         aria-label="Main content"
       >
         <div className="max-w-7xl mx-auto">
-          {/* Tab Navigation */}
           <nav
             className="flex flex-wrap justify-center mb-12 border-b border-gray-200"
             role="tablist"
@@ -212,9 +208,7 @@ export default function Home() {
             </button>
           </nav>
 
-          {/* Tab Content */}
           <div className="bg-white rounded-lg shadow-lg p-8">
-            {/* Overview Tab */}
             {activeTab === "overview" && (
               <div
                 id="overview-section"
@@ -315,7 +309,6 @@ export default function Home() {
               </div>
             )}
 
-            {/* Features Tab */}
             {activeTab === "features" && (
               <div
                 id="features-section"
@@ -460,7 +453,6 @@ export default function Home() {
               </div>
             )}
 
-            {/* Help Tab */}
             {activeTab === "help" && (
               <div
                 id="help-section"
@@ -561,7 +553,6 @@ export default function Home() {
               </div>
             )}
 
-            {/* Contact Tab */}
             {activeTab === "contact" && (
               <div
                 id="contact-section"
@@ -710,7 +701,6 @@ export default function Home() {
         </div>
       </main>
 
-      {/* Footer */}
       <Footer onNavigateToSection={handleFooterNavigation} />
     </div>
   );

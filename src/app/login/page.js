@@ -67,8 +67,47 @@ export default function LoginPage() {
 
     if (!formData.password) {
       newErrors.password = "Password is required";
-    } else if (formData.password.length < 6) {
-      newErrors.password = "Password must be at least 6 characters";
+    } else {
+      const password = formData.password;
+      const errors = [];
+
+      // Check minimum length
+      if (password.length < 8) {
+        errors.push("at least 8 characters");
+      }
+
+      // Check for uppercase letter
+      if (!/[A-Z]/.test(password)) {
+        errors.push("one uppercase letter");
+      }
+
+      // Check for lowercase letter
+      if (!/[a-z]/.test(password)) {
+        errors.push("one lowercase letter");
+      }
+
+      // Check for special character
+      if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(password)) {
+        errors.push("one special character");
+      }
+
+      // Check if password contains first name or last name
+      if (
+        formData.firstName &&
+        password.toLowerCase().includes(formData.firstName.toLowerCase())
+      ) {
+        errors.push("not contain your first name");
+      }
+      if (
+        formData.lastName &&
+        password.toLowerCase().includes(formData.lastName.toLowerCase())
+      ) {
+        errors.push("not contain your last name");
+      }
+
+      if (errors.length > 0) {
+        newErrors.password = `Password must contain ${errors.join(", ")}`;
+      }
     }
 
     if (!isLogin) {
@@ -163,7 +202,6 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Skip to main content link */}
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-purple-600 text-white px-4 py-2 rounded z-50"
@@ -336,11 +374,7 @@ export default function LoginPage() {
                         name="firstName"
                         value={formData.firstName}
                         onChange={handleInputChange}
-                        className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900 ${
-                          errors.firstName
-                            ? "border-red-300"
-                            : "border-gray-300"
-                        }`}
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900"
                       />
                       {errors.firstName && (
                         <p className="mt-1 text-sm text-red-600">
@@ -357,9 +391,7 @@ export default function LoginPage() {
                         name="lastName"
                         value={formData.lastName}
                         onChange={handleInputChange}
-                        className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900 ${
-                          errors.lastName ? "border-red-300" : "border-gray-300"
-                        }`}
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900"
                       />
                       {errors.lastName && (
                         <p className="mt-1 text-sm text-red-600">
@@ -380,11 +412,7 @@ export default function LoginPage() {
                         value={formData.studentId}
                         onChange={handleInputChange}
                         placeholder="e.g., 12345678"
-                        className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900 ${
-                          errors.studentId
-                            ? "border-red-300"
-                            : "border-gray-300"
-                        }`}
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900"
                       />
                       {errors.studentId && (
                         <p className="mt-1 text-sm text-red-600">
@@ -403,11 +431,7 @@ export default function LoginPage() {
                         name="department"
                         value={formData.department}
                         onChange={handleInputChange}
-                        className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900 ${
-                          errors.department
-                            ? "border-red-300"
-                            : "border-gray-300"
-                        }`}
+                        className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900"
                       >
                         <option value="">Select Department</option>
                         <option value="student-administration">
@@ -442,9 +466,7 @@ export default function LoginPage() {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className={`mt-1 block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900 ${
-                    errors.email ? "border-red-300" : "border-gray-300"
-                  }`}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900"
                   aria-describedby={errors.email ? "email-error" : undefined}
                   aria-invalid={!!errors.email}
                   required
@@ -468,6 +490,12 @@ export default function LoginPage() {
                 >
                   Password
                 </label>
+                {!isLogin && (
+                  <p className="mt-1 text-xs text-gray-500">
+                    Must be at least 8 characters with uppercase, lowercase,
+                    special character, and not contain your name
+                  </p>
+                )}
                 <div className="relative">
                   <input
                     id="password"
@@ -475,9 +503,7 @@ export default function LoginPage() {
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    className={`mt-1 block w-full pr-10 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900 ${
-                      errors.password ? "border-red-300" : "border-gray-300"
-                    }`}
+                    className="mt-1 block w-full pr-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900"
                     aria-describedby={
                       errors.password ? "password-error" : undefined
                     }
@@ -558,11 +584,7 @@ export default function LoginPage() {
                       name="confirmPassword"
                       value={formData.confirmPassword}
                       onChange={handleInputChange}
-                      className={`mt-1 block w-full pr-10 px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900 ${
-                        errors.confirmPassword
-                          ? "border-red-300"
-                          : "border-gray-300"
-                      }`}
+                      className="mt-1 block w-full pr-10 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900"
                       aria-describedby={
                         errors.confirmPassword
                           ? "confirmPassword-error"

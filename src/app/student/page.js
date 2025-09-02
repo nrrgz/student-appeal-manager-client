@@ -106,7 +106,6 @@ export default function StudentDashboard() {
   return (
     <ProtectedRoute requiredRole="student">
       <div className="min-h-screen bg-gray-50">
-        {/* Skip to main content link */}
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-purple-600 text-white px-4 py-2 rounded z-50"
@@ -134,7 +133,6 @@ export default function StudentDashboard() {
               </button>
             </header>
 
-            {/* Error Message */}
             {error && (
               <div
                 className="bg-red-50 border border-red-200 rounded-md p-4 mb-6"

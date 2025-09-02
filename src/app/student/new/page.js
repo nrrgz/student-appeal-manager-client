@@ -22,6 +22,7 @@ export default function NewAppeal() {
     phone: "",
     course: "",
     department: "",
+    customDepartment: "",
 
     hasAdviser: false,
     adviserName: "",
@@ -123,7 +124,6 @@ export default function NewAppeal() {
       [field]: value,
     }));
 
-    // Clear field error when user starts typing/selecting
     if (fieldErrors[field]) {
       setFieldErrors((prev) => {
         const newErrors = { ...prev };
@@ -214,11 +214,9 @@ export default function NewAppeal() {
         };
       });
 
-      // Show success message
       setUploadSuccess(`${newFiles.length} file(s) uploaded successfully!`);
       setUploadError(null);
 
-      // Clear success message after 3 seconds
       setTimeout(() => setUploadSuccess(null), 3000);
     }
   };
@@ -273,7 +271,6 @@ export default function NewAppeal() {
   };
 
   const nextStep = () => {
-    // Clear previous errors
     setFieldErrors({});
     setStepErrors({});
 
@@ -282,7 +279,6 @@ export default function NewAppeal() {
       return;
     }
 
-    // Validate current step
     const stepErrors = validateStep(currentStep);
     if (Object.keys(stepErrors).length > 0) {
       setFieldErrors(stepErrors);
@@ -317,8 +313,14 @@ export default function NewAppeal() {
         if (!formData.course.trim()) errors.course = "Course is required";
         break;
       case 3:
-        if (!formData.department.trim())
+        if (!formData.department.trim()) {
           errors.department = "Department selection is required";
+        } else if (
+          formData.department === "Other" &&
+          !formData.customDepartment.trim()
+        ) {
+          errors.department = "Please specify your department";
+        }
         break;
       case 5:
         if (!formData.appealType) errors.appealType = "Appeal type is required";
@@ -399,7 +401,12 @@ export default function NewAppeal() {
       formDataToSend.append("email", formData.email);
       formDataToSend.append("phone", formData.phone || "");
       formDataToSend.append("course", formData.course);
-      formDataToSend.append("department", formData.department);
+      formDataToSend.append(
+        "department",
+        formData.department === "Other"
+          ? formData.customDepartment
+          : formData.department
+      );
       formDataToSend.append("hasAdviser", formData.hasAdviser);
       formDataToSend.append(
         "adviserName",
@@ -455,7 +462,6 @@ export default function NewAppeal() {
 
       handleInputChange("submitted", true);
 
-      // Clear all errors on successful submission
       setFieldErrors({});
       setStepErrors({});
       setUploadError(null);
@@ -730,9 +736,10 @@ export default function NewAppeal() {
                 <input
                   type="text"
                   placeholder="Please specify your department"
+                  value={formData.customDepartment}
                   className="mt-2 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-purple-500 focus:border-purple-500 text-gray-900"
                   onChange={(e) =>
-                    handleInputChange("department", e.target.value)
+                    handleInputChange("customDepartment", e.target.value)
                   }
                 />
               )}
@@ -962,7 +969,6 @@ export default function NewAppeal() {
               </p>
             </div>
 
-            {/* File Upload Area */}
             <div
               className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
                 isDragOver
@@ -1010,7 +1016,6 @@ export default function NewAppeal() {
               </div>
             </div>
 
-            {/* Success Display */}
             {uploadSuccess && (
               <div className="bg-green-50 border border-green-200 rounded-md p-4">
                 <div className="flex">
@@ -1039,7 +1044,6 @@ export default function NewAppeal() {
               </div>
             )}
 
-            {/* Error Display */}
             {uploadError && (
               <div className="bg-red-50 border border-red-200 rounded-md p-4">
                 <div className="flex">
@@ -1068,7 +1072,6 @@ export default function NewAppeal() {
               </div>
             )}
 
-            {/* Uploaded Files List */}
             {uploadedFiles.length > 0 && (
               <div className="space-y-3">
                 <h4 className="text-lg font-medium text-gray-900">
@@ -1081,7 +1084,6 @@ export default function NewAppeal() {
                       className="flex items-center justify-between p-3 bg-white border border-gray-200 rounded-lg"
                     >
                       <div className="flex items-center space-x-3">
-                        {/* File Icon */}
                         <div className="flex-shrink-0">
                           {file.type.startsWith("image/") ? (
                             <div className="w-10 h-10 rounded border overflow-hidden">
@@ -1108,7 +1110,6 @@ export default function NewAppeal() {
                           )}
                         </div>
 
-                        {/* File Info */}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-900 truncate">
                             {file.name}
@@ -1119,7 +1120,6 @@ export default function NewAppeal() {
                         </div>
                       </div>
 
-                      {/* Remove Button */}
                       <button
                         type="button"
                         onClick={() => removeFile(file.id)}
@@ -1144,7 +1144,6 @@ export default function NewAppeal() {
               </div>
             )}
 
-            {/* Help Text */}
             <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
               <h4 className="text-sm font-medium text-gray-900 mb-2">
                 What to upload:
@@ -1184,7 +1183,9 @@ export default function NewAppeal() {
                 <p className="text-sm text-gray-600">{formData.email}</p>
                 <p className="text-sm text-gray-600">
                   <strong>Department:</strong>{" "}
-                  {formData.department || "Not selected"}
+                  {formData.department === "Other"
+                    ? formData.customDepartment
+                    : formData.department || "Not selected"}
                 </p>
                 <p className="text-sm text-gray-600">
                   <strong>Course:</strong> {formData.course || "Not specified"}
@@ -1353,7 +1354,6 @@ export default function NewAppeal() {
   return (
     <ProtectedRoute requiredRole="student">
       <div className="min-h-screen bg-gray-50">
-        {/* Skip to main content link */}
         <a
           href="#main-content"
           className="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-purple-600 text-white px-4 py-2 rounded z-50"
@@ -1424,7 +1424,6 @@ export default function NewAppeal() {
           aria-label="Appeal creation form"
         >
           <div className="bg-white rounded-lg shadow-lg p-8">
-            {/* Progress Bar */}
             <div className="mb-6">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium text-gray-700">
@@ -1458,7 +1457,6 @@ export default function NewAppeal() {
               </p>
             </header>
 
-            {/* Error Message */}
             {error && (
               <div
                 className="bg-red-50 border border-red-200 rounded-md p-4 mb-6"
