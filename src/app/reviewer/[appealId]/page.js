@@ -742,15 +742,15 @@ export default function AppealReview() {
                               : "No content"}
                           </p>
                           <p className="text-gray-500 text-xs mt-1">
-                            {typeof note.author === "string"
-                              ? note.author
-                              : typeof note.admin === "string"
-                              ? note.admin
-                              : "Unknown"}{" "}
+                            {note.author?.firstName && note.author?.lastName
+                              ? `${note.author.firstName} ${note.author.lastName}`
+                              : note.author?.firstName ||
+                                note.author?.lastName ||
+                                "Unknown"}{" "}
                             •{" "}
-                            {typeof note.timestamp === "string"
-                              ? note.timestamp
-                              : "Unknown time"}
+                            {note.createdAt
+                              ? new Date(note.createdAt).toLocaleDateString()
+                              : note.timestamp || "Unknown time"}
                           </p>
                         </div>
                       ))
@@ -795,15 +795,16 @@ export default function AppealReview() {
                               : "No content"}
                           </p>
                           <p className="text-gray-500 text-xs mt-1">
-                            {typeof comment.author === "string"
-                              ? comment.author
-                              : typeof comment.admin === "string"
-                              ? comment.admin
-                              : "Unknown"}{" "}
+                            {comment.author?.firstName &&
+                            comment.author?.lastName
+                              ? `${comment.author.firstName} ${comment.author.lastName}`
+                              : comment.author?.firstName ||
+                                comment.author?.lastName ||
+                                "Unknown"}{" "}
                             •{" "}
-                            {typeof comment.timestamp === "string"
-                              ? comment.timestamp
-                              : "Unknown time"}
+                            {comment.createdAt
+                              ? new Date(comment.createdAt).toLocaleDateString()
+                              : comment.timestamp || "Unknown time"}
                           </p>
                         </div>
                       ))

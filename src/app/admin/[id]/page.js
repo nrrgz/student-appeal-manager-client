@@ -547,7 +547,8 @@ export default function AppealManagement() {
                     </div>
                   </div>
                 )}
-                <div>
+
+                <div className="mt-6 pt-6 border-t border-gray-200">
                   <label className="block text-sm font-medium text-gray-700">
                     Current Deadline
                   </label>
@@ -996,7 +997,6 @@ export default function AppealManagement() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                   >
                     <option value="">Select a reviewer</option>
-                    <option value="">Unassign reviewer</option>
                     {availableReviewers.map((reviewer) => (
                       <option key={reviewer._id} value={reviewer._id}>
                         {reviewer.firstName} {reviewer.lastName}{" "}
@@ -1015,7 +1015,7 @@ export default function AppealManagement() {
                     onChange={(e) => setSelectedPriority(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-gray-900"
                   >
-                    <option value="">Keep current priority</option>
+                    <option value="">Select priority</option>
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
                     <option value="high">High</option>

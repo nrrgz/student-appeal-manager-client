@@ -38,29 +38,6 @@ export default function StatisticsDashboard() {
           percentage: Math.round((type.count / apiData.total) * 100 * 10) / 10,
         }));
 
-        const departmentStats = apiData.departmentCounts.map((dept) => {
-          const deptTotal = dept.count;
-          const resolvedRatio =
-            apiData.total > 0 ? resolvedAppeals / apiData.total : 0;
-          const rejectedRatio =
-            apiData.total > 0 ? rejectedAppeals / apiData.total : 0;
-
-          return {
-            department: dept._id || "Unknown",
-            total: deptTotal,
-            resolved: Math.round(deptTotal * resolvedRatio),
-            rejected: Math.round(deptTotal * rejectedRatio),
-          };
-        });
-
-        const monthlyTrends = apiData.monthlyTrends.slice(-6).map((trend) => ({
-          month: new Date(trend.month).toLocaleDateString("en-US", {
-            month: "short",
-          }),
-          appeals: trend.appeals,
-          resolved: trend.resolved,
-        }));
-
         const avgResolutionTime =
           apiData.resolutionStats.avgResolutionTime || 0;
         const resolutionTimes = {
@@ -78,8 +55,6 @@ export default function StatisticsDashboard() {
           averageResolutionTime: Math.round(avgResolutionTime * 10) / 10,
           resolutionTimes,
           commonGrounds,
-          departmentStats,
-          monthlyTrends,
         };
 
         setStats(transformedStats);
@@ -98,8 +73,6 @@ export default function StatisticsDashboard() {
             "10+ days": 0,
           },
           commonGrounds: [],
-          departmentStats: [],
-          monthlyTrends: [],
         };
         setStats(mockStats);
       } finally {
@@ -347,91 +320,6 @@ export default function StatisticsDashboard() {
                 </div>
               ))}
             </div>
-          </div>
-        </div>
-
-        <div className="mt-8 bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h3 className="text-lg font-medium text-gray-900">
-              Department Statistics
-            </h3>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Department
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Total Appeals
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Resolved
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Rejected
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Resolution Rate
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {stats.departmentStats.map((dept, index) => (
-                  <tr key={index} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      {dept.department}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {dept.total}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {dept.resolved}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {dept.rejected}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      <span
-                        className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          dept.resolved / dept.total >= 0.8
-                            ? "bg-green-100 text-green-800"
-                            : dept.resolved / dept.total >= 0.6
-                            ? "bg-yellow-100 text-yellow-800"
-                            : "bg-red-100 text-red-800"
-                        }`}
-                      >
-                        {Math.round((dept.resolved / dept.total) * 100)}%
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div className="mt-8 bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
-            Monthly Trends
-          </h3>
-          <div className="grid grid-cols-6 gap-4">
-            {stats.monthlyTrends.map((month, index) => (
-              <div key={index} className="text-center">
-                <div className="text-sm font-medium text-gray-900">
-                  {month.month}
-                </div>
-                <div className="mt-2 space-y-1">
-                  <div className="text-xs text-gray-500">
-                    Appeals: {month.appeals}
-                  </div>
-                  <div className="text-xs text-green-600">
-                    Resolved: {month.resolved}
-                  </div>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
 
