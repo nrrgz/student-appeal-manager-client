@@ -39,7 +39,7 @@ export default function AppealReview() {
 
     setUserInfo(parsedUser);
     fetchAppeal();
-  }, [router, appealId]);
+  }, [router, appealId, fetchAppeal]);
 
   const fetchAppeal = async () => {
     try {

@@ -86,9 +86,9 @@ export default function Home() {
             Streamline Your Academic Appeals
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            The University of Sheffield's comprehensive appeal management system
-            designed to make the appeal process transparent, efficient, and
-            accessible for students, reviewers, and administrators.
+            The University of Sheffield&apos;s comprehensive appeal management
+            system designed to make the appeal process transparent, efficient,
+            and accessible for students, reviewers, and administrators.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             {isAuthenticated ? (
@@ -224,9 +224,9 @@ export default function Home() {
                   <p className="text-lg text-gray-600 max-w-3xl mx-auto">
                     Our platform provides a comprehensive solution for managing
                     academic appeals at the University of Sheffield. Whether
-                    you're a student seeking to appeal a decision, a reviewer
-                    evaluating appeals, or an administrator overseeing the
-                    process, our system streamlines every step.
+                    you&apos;re a student seeking to appeal a decision, a
+                    reviewer evaluating appeals, or an administrator overseeing
+                    the process, our system streamlines every step.
                   </p>
                 </div>
 
@@ -477,7 +477,7 @@ export default function Home() {
                       </p>
                       <p>
                         <strong>2. Submit an Appeal:</strong> Navigate to the
-                        student dashboard and click "New Appeal".
+                        student dashboard and click &quot;New Appeal&quot;.
                       </p>
                       <p>
                         <strong>3. Upload Documents:</strong> Attach all
@@ -500,7 +500,7 @@ export default function Home() {
                           What documents do I need for an appeal?
                         </h5>
                         <p className="text-gray-600 mt-1">
-                          You'll need your original assessment results, any
+                          You&apos;ll need your original assessment results, any
                           relevant medical certificates, and supporting evidence
                           for your appeal.
                         </p>
@@ -531,8 +531,8 @@ export default function Home() {
                       Need More Help?
                     </h4>
                     <p className="text-gray-600 mb-4">
-                      If you can't find the answer you're looking for, our
-                      support team is here to help.
+                      If you can&apos;t find the answer you&apos;re looking for,
+                      our support team is here to help.
                     </p>
                     <div className="flex flex-wrap gap-4">
                       <button
@@ -651,7 +651,7 @@ export default function Home() {
                             Student Services Information Desk
                           </p>
                           <p className="text-sm text-gray-500">
-                            Level 3, Students' Union Building
+                            Level 3, Students&apos; Union Building
                           </p>
                         </div>
                       </div>
@@ -687,7 +687,7 @@ export default function Home() {
                     <div className="bg-red-50 p-4 rounded-lg border border-red-200">
                       <p className="text-red-800 text-sm">
                         For urgent matters outside office hours, please contact
-                        the University's 24/7 support line:
+                        the University&apos;s 24/7 support line:
                         <strong className="block mt-1">
                           +44 (0) 114 222 4085
                         </strong>

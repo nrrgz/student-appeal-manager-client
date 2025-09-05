@@ -706,7 +706,7 @@ export default function LoginPage() {
               <div className="mt-6 text-center">
                 <p className="text-xs text-gray-500">
                   This is a demonstration system for the University of
-                  Sheffield's Student Appeal Manager (SAM).
+                  Sheffield&apos;s Student Appeal Manager (SAM).
                   <br />
                   All data is simulated for testing purposes.
                 </p>

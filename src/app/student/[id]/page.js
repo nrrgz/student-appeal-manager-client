@@ -226,8 +226,8 @@ export default function AppealDetail() {
               Appeal Not Found
             </h2>
             <p className="text-gray-600 mb-6">
-              The appeal you're looking for doesn't exist or you don't have
-              permission to view it.
+              The appeal you&apos;re looking for doesn&apos;t exist or you
+              don&apos;t have permission to view it.
             </p>
             <button
               onClick={() => router.push("/student")}
@@ -679,8 +679,8 @@ export default function AppealDetail() {
                       </summary>
                       <div className="mt-2 text-sm text-gray-600 pl-4 border-l-2 border-gray-200">
                         The typical appeal process takes 4-6 weeks. Complex
-                        cases may take longer. You'll receive updates at each
-                        stage.
+                        cases may take longer. You&apos;ll receive updates at
+                        each stage.
                       </div>
                     </details>
 
@@ -702,9 +702,9 @@ export default function AppealDetail() {
                         </svg>
                       </summary>
                       <div className="mt-2 text-sm text-gray-600 pl-4 border-l-2 border-gray-200">
-                        If your appeal is rejected, you'll receive a detailed
-                        explanation. You may have the right to request a review
-                        of the decision.
+                        If your appeal is rejected, you&apos;ll receive a
+                        detailed explanation. You may have the right to request
+                        a review of the decision.
                       </div>
                     </details>
 

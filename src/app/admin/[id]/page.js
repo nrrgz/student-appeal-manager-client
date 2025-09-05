@@ -47,7 +47,7 @@ export default function AppealManagement() {
     if (appealId) {
       fetchAppeal();
     }
-  }, [appealId]);
+  }, [appealId, fetchAppeal]);
 
   useEffect(() => {
     fetchAvailableReviewers();

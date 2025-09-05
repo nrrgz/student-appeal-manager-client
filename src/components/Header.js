@@ -2,6 +2,7 @@
 
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { useAuth } from "../contexts/AuthContext";
 import { useEffect, useState } from "react";
 
@@ -144,9 +145,11 @@ export default function Header() {
               href="/"
               aria-label="University of Sheffield Student Appeal Manager - Home"
             >
-              <img
+              <Image
                 src="/images/logo.png"
                 alt="University of Sheffield Logo"
+                width={120}
+                height={40}
                 className="w-30 object-contain"
               />
             </Link>

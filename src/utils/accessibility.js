@@ -233,7 +233,7 @@ export const focusVisible = {
   },
 };
 
-export default {
+const accessibilityUtils = {
   announceToScreenReader,
   manageFocus,
   generateId,
@@ -246,3 +246,5 @@ export default {
   srOnly,
   focusVisible,
 };
+
+export default accessibilityUtils;

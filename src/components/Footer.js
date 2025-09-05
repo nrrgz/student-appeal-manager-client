@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Footer({ onNavigateToSection }) {
   return (
     <footer
@@ -20,22 +22,22 @@ export default function Footer({ onNavigateToSection }) {
             <h4 className="text-md font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2 text-sm text-gray-300" role="list">
               <li>
-                <a
+                <Link
                   href="/"
                   className="hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded"
                   aria-label="Go to homepage"
                 >
                   Home
-                </a>
+                </Link>
               </li>
               <li>
-                <a
+                <Link
                   href="/login"
                   className="hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded"
                   aria-label="Login to your account"
                 >
                   Login
-                </a>
+                </Link>
               </li>
               <li>
                 {onNavigateToSection ? (
@@ -47,13 +49,13 @@ export default function Footer({ onNavigateToSection }) {
                     Help
                   </button>
                 ) : (
-                  <a
+                  <Link
                     href="/#help"
                     className="hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded"
                     aria-label="Go to help and support section"
                   >
                     Help
-                  </a>
+                  </Link>
                 )}
               </li>
               <li>
@@ -66,13 +68,13 @@ export default function Footer({ onNavigateToSection }) {
                     Contact
                   </button>
                 ) : (
-                  <a
+                  <Link
                     href="/#contact"
                     className="hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded"
                     aria-label="Go to contact section"
                   >
                     Contact
-                  </a>
+                  </Link>
                 )}
               </li>
             </ul>
@@ -108,13 +110,13 @@ export default function Footer({ onNavigateToSection }) {
                     FAQ
                   </button>
                 ) : (
-                  <a
+                  <Link
                     href="/#help"
                     className="hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 rounded"
                     aria-label="Go to frequently asked questions"
                   >
                     FAQ
-                  </a>
+                  </Link>
                 )}
               </li>
             </ul>

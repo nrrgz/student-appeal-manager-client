@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import ProtectedRoute from "../../../components/ProtectedRoute";
 import Footer from "../../../components/Footer";
 import apiService from "../../../services/api";
@@ -1087,9 +1088,11 @@ export default function NewAppeal() {
                         <div className="flex-shrink-0">
                           {file.type.startsWith("image/") ? (
                             <div className="w-10 h-10 rounded border overflow-hidden">
-                              <img
+                              <Image
                                 src={file.preview}
                                 alt={file.name}
+                                width={40}
+                                height={40}
                                 className="w-full h-full object-cover"
                               />
                             </div>
@@ -1149,7 +1152,7 @@ export default function NewAppeal() {
                 What to upload:
               </h4>
               <ul className="text-sm text-gray-600 space-y-1">
-                <li>• Medical certificates or doctor's notes</li>
+                <li>• Medical certificates or doctor&apos;s notes</li>
                 <li>• Official letters or correspondence</li>
                 <li>• Screenshots of technical issues</li>
                 <li>• Any other relevant supporting documentation</li>
@@ -1375,7 +1378,6 @@ export default function NewAppeal() {
               </div>
               <nav
                 className="flex items-center"
-                aria-label="Appeal creation progress"
                 role="progressbar"
                 aria-valuenow={currentStep}
                 aria-valuemin={1}
