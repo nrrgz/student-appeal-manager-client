@@ -43,16 +43,6 @@ export default function AppealManagement() {
     setUserInfo(user);
   }, []);
 
-  useEffect(() => {
-    if (appealId) {
-      fetchAppeal();
-    }
-  }, [appealId, fetchAppeal]);
-
-  useEffect(() => {
-    fetchAvailableReviewers();
-  }, []);
-
   const fetchAppeal = async () => {
     try {
       setLoading(true);
@@ -83,6 +73,16 @@ export default function AppealManagement() {
       console.error("Failed to fetch reviewers:", error);
     }
   };
+
+  useEffect(() => {
+    if (appealId) {
+      fetchAppeal();
+    }
+  }, [appealId]);
+
+  useEffect(() => {
+    fetchAvailableReviewers();
+  }, []);
 
   const handleAddNote = async () => {
     if (!newNote.trim() || submitting) return;

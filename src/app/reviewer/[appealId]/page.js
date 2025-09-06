@@ -24,23 +24,6 @@ export default function AppealReview() {
   const params = useParams();
   const appealId = params.appealId;
 
-  useEffect(() => {
-    const user = localStorage.getItem("userInfo");
-    if (!user) {
-      router.push("/login");
-      return;
-    }
-
-    const parsedUser = JSON.parse(user);
-    if (parsedUser.role !== "reviewer") {
-      router.push("/login");
-      return;
-    }
-
-    setUserInfo(parsedUser);
-    fetchAppeal();
-  }, [router, appealId, fetchAppeal]);
-
   const fetchAppeal = async () => {
     try {
       setLoading(true);
@@ -95,6 +78,23 @@ export default function AppealReview() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const user = localStorage.getItem("userInfo");
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
+    const parsedUser = JSON.parse(user);
+    if (parsedUser.role !== "reviewer") {
+      router.push("/login");
+      return;
+    }
+
+    setUserInfo(parsedUser);
+    fetchAppeal();
+  }, [router, appealId]);
 
   const handleDownload = async (file) => {
     try {
